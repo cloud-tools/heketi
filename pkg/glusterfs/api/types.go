@@ -246,9 +246,10 @@ type ClusterSetFlagsRequest struct {
 }
 
 type ClusterInfoResponse struct {
-	Id      string           `json:"id"`
-	Nodes   sort.StringSlice `json:"nodes"`
-	Volumes sort.StringSlice `json:"volumes"`
+	Id        string           `json:"id"`
+	Nodes     sort.StringSlice `json:"nodes"`
+	Volumes   sort.StringSlice `json:"volumes"`
+	Snapshots sort.StringSlice `json:"snapshots"`
 	ClusterFlags
 	BlockVolumes sort.StringSlice `json:"blockvolumes"`
 	MasterSlaveCluster
@@ -374,6 +375,26 @@ func (vcr VolumeCloneRequest) Validate() error {
 	return validation.ValidateStruct(&vcr,
 		validation.Field(&vcr.Name, validation.Match(volumeNameRe)),
 	)
+}
+
+type VolumeSnapshotRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+func (vscr VolumeSnapshotRequest) Validate() error {
+	return nil
+}
+
+type SnapshotListResponse struct {
+	Snapshots []string `json:"snapshots"`
+}
+
+type SnapshotDeleteRequest struct {
+}
+
+type SnapshotInfoResponse struct {
+	SnapshotInfo
 }
 
 type VolumeBlockRestrictionRequest struct {
@@ -609,6 +630,12 @@ func (v *MasterSlaveStatus) String() string {
 	}
 
 	return s + vols
+}
+
+type SnapshotInfo struct {
+	originVolume VolumeInfo
+	VolumeSnapshotRequest
+	Id string `json:"id"`
 }
 
 // Constructors
