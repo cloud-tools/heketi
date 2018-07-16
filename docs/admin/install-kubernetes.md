@@ -36,7 +36,7 @@ service iptables save
 
 Heketi provides a CLI that provides users with a means to administer
 the deployment and configuration of GlusterFS in Kubernetes.
-[Download and install the heketi-cli](https://github.com/heketi/heketi/releases)
+[Download and install the heketi-cli](https://github.com/cloud-tools/heketi/releases)
 on your client machine.
 
 ## Kubernetes Deployment

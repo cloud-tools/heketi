@@ -18,12 +18,12 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/cloud-tools/heketi/executors"
+	"github.com/cloud-tools/heketi/executors/kubeexec"
+	"github.com/cloud-tools/heketi/executors/mockexec"
+	"github.com/cloud-tools/heketi/executors/sshexec"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/gorilla/mux"
-	"github.com/heketi/heketi/executors"
-	"github.com/heketi/heketi/executors/kubeexec"
-	"github.com/heketi/heketi/executors/mockexec"
-	"github.com/heketi/heketi/executors/sshexec"
-	"github.com/heketi/heketi/pkg/utils"
 	"github.com/heketi/rest"
 )
 
@@ -151,7 +151,7 @@ func NewApp(configIo io.Reader) *App {
 		logger.Info(
 			"Please refer to the Heketi troubleshooting documentation for more" +
 				" information on how to resolve this issue.")
-		panic(e)
+		//		panic(e) // 2DO - merge from 6.0 master
 	}
 
 	// Set values mentioned in environmental variable
@@ -393,6 +393,40 @@ func (a *App) SetRoutes(router *mux.Router) error {
 			Method:      "GET",
 			Pattern:     "/db/dump",
 			HandlerFunc: a.DbDump},
+
+		// Geo-replication
+		rest.Route{
+			Name:        "GeoReplicationStatus",
+			Method:      "GET",
+			Pattern:     "/georeplication",
+			HandlerFunc: a.GeoReplicationStatus},
+		rest.Route{
+			Name:        "GeoReplicationVolumeStatus",
+			Method:      "GET",
+			Pattern:     "/volumes/{id:[A-Fa-f0-9]+}/georeplication",
+			HandlerFunc: a.GeoReplicationVolumeStatus},
+		rest.Route{
+			Name:        "GeoReplication",
+			Method:      "POST",
+			Pattern:     "/volumes/{id:[A-Fa-f0-9]+}/georeplication",
+			HandlerFunc: a.GeoReplicationPostHandler},
+
+		// Master-slave
+		rest.Route{
+			Name:        "MasterSlaveStatus",
+			Method:      "GET",
+			Pattern:     "/masterslave",
+			HandlerFunc: a.MasterSlaveStatus},
+		rest.Route{
+			Name:        "MasterSlaveClustersStatus",
+			Method:      "GET",
+			Pattern:     "/clusters/{id:[A-Fa-f0-9]+}/masterslave",
+			HandlerFunc: a.MasterSlaveClustersStatus},
+		rest.Route{
+			Name:        "MasterSlave",
+			Method:      "POST",
+			Pattern:     "/clusters/{id:[A-Fa-f0-9]+}/masterslave",
+			HandlerFunc: a.MasterSlaveClusterPostHandler},
 	}
 
 	// Register all routes from the App

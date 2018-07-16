@@ -16,9 +16,9 @@ import (
 	"os"
 	"strings"
 
-	client "github.com/heketi/heketi/client/api/go-client"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/kubernetes"
+	client "github.com/cloud-tools/heketi/client/api/go-client"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 
@@ -48,6 +48,7 @@ func init() {
 	volumeCommand.AddCommand(volumeExpandCommand)
 	volumeCommand.AddCommand(volumeInfoCommand)
 	volumeCommand.AddCommand(volumeListCommand)
+	initGeoRepCommand()
 
 	volumeCreateCommand.Flags().IntVar(&size, "size", -1,
 		"\n\tSize of volume in GiB")

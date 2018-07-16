@@ -16,8 +16,8 @@ import (
 	"sort"
 
 	"github.com/boltdb/bolt"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/lpabon/godbc"
 )
 
@@ -52,7 +52,7 @@ func NewClusterEntryFromRequest(req *api.ClusterCreateRequest) *ClusterEntry {
 	entry.Info.Id = utils.GenUUID()
 	entry.Info.Block = req.Block
 	entry.Info.File = req.File
-
+	entry.Info.Side = req.Side
 	return entry
 }
 

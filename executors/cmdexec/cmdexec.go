@@ -12,7 +12,7 @@ package cmdexec
 import (
 	"sync"
 
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/pkg/utils"
 )
 
 var (

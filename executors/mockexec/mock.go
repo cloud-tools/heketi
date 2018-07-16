@@ -10,29 +10,37 @@
 package mockexec
 
 import (
-	"github.com/heketi/heketi/executors"
+	"github.com/cloud-tools/heketi/executors"
 )
 
 type MockExecutor struct {
 	// These functions can be overwritten for testing
-	MockGlusterdCheck      func(host string) error
-	MockPeerProbe          func(exec_host, newnode string) error
-	MockPeerDetach         func(exec_host, newnode string) error
-	MockDeviceSetup        func(host, device, vgid string) (*executors.DeviceInfo, error)
-	MockDeviceTeardown     func(host, device, vgid string) error
-	MockBrickCreate        func(host string, brick *executors.BrickRequest) (*executors.BrickInfo, error)
-	MockBrickDestroy       func(host string, brick *executors.BrickRequest) error
-	MockBrickDestroyCheck  func(host string, brick *executors.BrickRequest) error
-	MockVolumeCreate       func(host string, volume *executors.VolumeRequest) (*executors.Volume, error)
-	MockVolumeExpand       func(host string, volume *executors.VolumeRequest) (*executors.Volume, error)
-	MockVolumeDestroy      func(host string, volume string) error
-	MockVolumeDestroyCheck func(host, volume string) error
-	MockVolumeReplaceBrick func(host string, volume string, oldBrick *executors.BrickInfo, newBrick *executors.BrickInfo) error
-	MockVolumeInfo         func(host string, volume string) (*executors.Volume, error)
-	MockHealInfo           func(host string, volume string) (*executors.HealInfo, error)
-	MockBlockVolumeCreate  func(host string, blockVolume *executors.BlockVolumeRequest) (*executors.BlockVolumeInfo, error)
-	MockBlockVolumeDestroy func(host string, blockHostingVolumeName string, blockVolumeName string) error
+	MockGlusterdCheck              func(host string) error
+	MockPeerProbe                  func(exec_host, newnode string) error
+	MockPeerDetach                 func(exec_host, newnode string) error
+	MockDeviceSetup                func(host, device, vgid string) (*executors.DeviceInfo, error)
+	MockDeviceTeardown             func(host, device, vgid string) error
+	MockBrickCreate                func(host string, brick *executors.BrickRequest) (*executors.BrickInfo, error)
+	MockBrickDestroy               func(host string, brick *executors.BrickRequest) error
+	MockBrickDestroyCheck          func(host string, brick *executors.BrickRequest) error
+	MockVolumeCreate               func(host string, volume *executors.VolumeRequest) (*executors.Volume, error)
+	MockVolumeExpand               func(host string, volume *executors.VolumeRequest) (*executors.Volume, error)
+	MockVolumeDestroy              func(host string, volume string) error
+	MockVolumeDestroyCheck         func(host, volume string) error
+	MockVolumeReplaceBrick         func(host string, volume string, oldBrick *executors.BrickInfo, newBrick *executors.BrickInfo) error
+	MockVolumeInfo                 func(host string, volume string) (*executors.Volume, error)
+	MockGeoReplicationCreate       func(host string, volume string, geoRep *executors.GeoReplicationRequest) error
+	MockGeoReplicationConfig       func(host string, volume string, geoRep *executors.GeoReplicationRequest) error
+	MockGeoReplicationAction       func(host string, volume string, action string, geoRep *executors.GeoReplicationRequest) error
+	MockGeoReplicationVolumeStatus func(host string, volume string) (*executors.GeoReplicationStatus, error)
+	MockGeoReplicationStatus       func(host string) (*executors.GeoReplicationStatus, error)
+	MockHealInfo                   func(host string, volume string) (*executors.HealInfo, error)
+	MockBlockVolumeCreate          func(host string, blockVolume *executors.BlockVolumeRequest) (*executors.BlockVolumeInfo, error)
+	MockBlockVolumeDestroy         func(host string, blockHostingVolumeName string, blockVolumeName string) error
+	MockSshdControl                func(host string, action string) error
 }
+
+//    SshdControl(host string, action string) error
 
 func NewMockExecutor() (*MockExecutor, error) {
 	m := &MockExecutor{}
@@ -137,6 +145,30 @@ func NewMockExecutor() (*MockExecutor, error) {
 		return nil
 	}
 
+	m.MockGeoReplicationCreate = func(host, volume string, geoRep *executors.GeoReplicationRequest) error {
+		return nil
+	}
+
+	m.MockGeoReplicationConfig = func(host, volume string, geoRep *executors.GeoReplicationRequest) error {
+		return nil
+	}
+
+	m.MockGeoReplicationAction = func(host, volume, action string, geoRep *executors.GeoReplicationRequest) error {
+		return nil
+	}
+
+	m.MockGeoReplicationVolumeStatus = func(host, volume string) (*executors.GeoReplicationStatus, error) {
+		return nil, nil
+	}
+
+	m.MockGeoReplicationStatus = func(host string) (*executors.GeoReplicationStatus, error) {
+		return nil, nil
+	}
+
+	m.MockSshdControl = func(host, action string) error {
+		return nil
+	}
+
 	return m, nil
 }
 
@@ -214,4 +246,28 @@ func (m *MockExecutor) BlockVolumeCreate(host string, blockVolume *executors.Blo
 
 func (m *MockExecutor) BlockVolumeDestroy(host string, blockHostingVolumeName string, blockVolumeName string) error {
 	return m.MockBlockVolumeDestroy(host, blockHostingVolumeName, blockVolumeName)
+}
+
+func (m *MockExecutor) GeoReplicationCreate(host, volume string, geoRep *executors.GeoReplicationRequest) error {
+	return m.MockGeoReplicationCreate(host, volume, geoRep)
+}
+
+func (m *MockExecutor) GeoReplicationConfig(host, volume string, geoRep *executors.GeoReplicationRequest) error {
+	return m.MockGeoReplicationConfig(host, volume, geoRep)
+}
+
+func (m *MockExecutor) GeoReplicationAction(host, volume, action string, geoRep *executors.GeoReplicationRequest) error {
+	return m.MockGeoReplicationAction(host, volume, action, geoRep)
+}
+
+func (m *MockExecutor) GeoReplicationVolumeStatus(host, volume string) (*executors.GeoReplicationStatus, error) {
+	return m.MockGeoReplicationVolumeStatus(host, volume)
+}
+
+func (m *MockExecutor) GeoReplicationStatus(host string) (*executors.GeoReplicationStatus, error) {
+	return m.MockGeoReplicationStatus(host)
+}
+
+func (m *MockExecutor) SshdControl(host, action string) error {
+	return m.MockSshdControl(host, action)
 }

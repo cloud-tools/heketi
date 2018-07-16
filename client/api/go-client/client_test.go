@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/heketi/heketi/apps/glusterfs"
-	"github.com/heketi/heketi/middleware"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/apps/glusterfs"
+	"github.com/cloud-tools/heketi/middleware"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/heketi/tests"
 	"github.com/urfave/negroni"
 )

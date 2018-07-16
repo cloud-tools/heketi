@@ -9,10 +9,11 @@ SHA := $(shell git rev-parse --short HEAD)
 BRANCH := $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 VER := $(shell git describe)
 TAG := $(shell git tag --points-at HEAD 'v[0-9].[0-9].[0-9]' | tail -n1)
-GOARCH := $(shell go env GOARCH)
-GOOS := $(shell go env GOOS)
-GOHOSTARCH := $(shell go env GOHOSTARCH)
-GOHOSTOS := $(shell go env GOHOSTOS)
+GO:=go
+GOARCH := $(shell $(GO) env GOARCH)
+GOOS := $(shell $(GO) env GOOS)
+GOHOSTARCH := $(shell $(GO) env GOHOSTARCH)
+GOHOSTOS := $(shell $(GO) env GOHOSTOS)
 GOBUILDFLAGS :=
 ifeq ($(GOOS), $(GOHOSTOS))
 ifeq ($(GOARCH), $(GOHOSTARCH))
@@ -31,14 +32,17 @@ else
 endif
 endif
 
-# Go setup
-GO=go
-TEST="go test"
+ifeq ($(GOSTATIC),static)
+        GOLDSTATIC :=-static
+endif
+ifeq ($(GOSTATIC),"static")
+        GOLDSTATIC :=-static
+endif
 
 # Sources and Targets
 EXECUTABLES :=$(APP_NAME)
 # Build Binaries setting main.version and main.build vars
-LDFLAGS :=-ldflags "-X main.HEKETI_CLI_VERSION=$(VERSION) -extldflags '-z relro -z now'"
+LDFLAGS :=-ldflags "-X main.HEKETI_CLI_VERSION=$(VERSION) -extldflags '-z relro -z now $(GOLDSTATIC)'"
 # Package target
 PACKAGE :=$(DIR)/dist/$(APP_NAME)-$(VERSION).$(GOOS).$(GOARCH).tar.gz
 
@@ -59,13 +63,13 @@ package:
 	@echo $(PACKAGE)
 
 build:
-	go build $(GOBUILDFLAGS) $(LDFLAGS) -o $(APP_NAME)
+	$(GO) build $(GOBUILDFLAGS) $(LDFLAGS) -o $(APP_NAME)
 
 run: build
 	./$(APP_NAME)
 
 test:
-	go test ./...
+	$(GO) test ./...
 
 clean:
 	@echo Cleaning Workspace...

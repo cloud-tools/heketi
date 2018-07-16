@@ -14,8 +14,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/heketi/heketi/client/api/go-client"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/client/api/go-client"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 	"github.com/spf13/cobra"
 )
 

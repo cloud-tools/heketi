@@ -100,7 +100,7 @@ class HeketiClient(object):
 
     def cluster_create(self, cluster_options={}):
         ''' cluster_options is a dict with cluster creation options:
-            https://github.com/heketi/heketi/wiki/API#cluster_create
+            https://github.com/cloud-tools/heketi/wiki/API#cluster_create
         '''
         req = self._make_request('POST', '/clusters', cluster_options)
         if req.status_code == requests.codes.created:
@@ -131,7 +131,7 @@ class HeketiClient(object):
     def node_add(self, node_options={}):
         '''
         node_options is a dict consisting of paramters for
-        adding a node: https://github.com/heketi/heketi/wiki/API#add-node
+        adding a node: https://github.com/cloud-tools/heketi/wiki/API#add-node
         '''
         uri = "/nodes"
         req = self._make_request('POST', uri, node_options)
@@ -161,7 +161,7 @@ class HeketiClient(object):
     def device_add(self, device_options={}):
         ''' device_options is a dict with parameters to be passed \
             in the json request: \
-            https://github.com/heketi/heketi/wiki/API#add-device
+            https://github.com/cloud-tools/heketi/wiki/API#add-device
         '''
         uri = '/devices'
         req = self._make_request('POST', uri, device_options)
@@ -194,7 +194,7 @@ class HeketiClient(object):
 
     def volume_create(self, volume_options={}):
         ''' volume_options is a dict with volume creation options:
-            https://github.com/heketi/heketi/wiki/API#create-a-volume
+            https://github.com/cloud-tools/heketi/wiki/API#create-a-volume
         '''
         uri = '/volumes'
         req = self._make_request('POST', uri, volume_options)
@@ -229,3 +229,130 @@ class HeketiClient(object):
         req = self._make_request('GET', uri)
         if req.status_code == requests.codes.ok:
             return req
+
+    def georeplication_create(self, volume_id, slave_host, slave_volume,
+                              slave_ssh_port=0, cmd_options={}):
+        ''' create_options is a dict with geo-replication session
+            creation options:
+             - option: push-pem | no-verify
+             - force
+        '''
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'create',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        if slave_ssh_port != 0:
+            payload['slavesshport'] = slave_ssh_port
+
+        payload['actionparams'] = cmd_options
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_config(self, volume_id, slave_host, slave_volume,
+                              cmd_options={}):
+        ''' cmd_options is a dict with geo-replication session
+            configuration options:
+             - sync-jobs
+             - log-level
+             - changelog-log-level
+             - ...
+        '''
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'config',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        payload['actionparams'] = cmd_options
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_start(self, volume_id, slave_host, slave_volume):
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'start',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_stop(self, volume_id, slave_host, slave_volume):
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'stop',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_pause(self, volume_id, slave_host, slave_volume):
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'pause',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_resume(self, volume_id, slave_host, slave_volume):
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'resume',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_delete(self, volume_id, slave_host, slave_volume):
+        uri = '/volumes/' + volume_id
+
+        payload = {
+            'action': 'delete',
+            'slavehost': slave_host,
+            'slavevolume': slave_volume
+        }
+
+        req = self._make_request('POST', uri, payload)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_status(self):
+        uri = '/georeplication'
+
+        req = self._make_request('GET', uri)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
+    def georeplication_volume_status(self, volume_id):
+        uri = '/volumes/' + volume_id
+
+        req = self._make_request('GET', uri)
+        if req.status_code == requests.codes.ok:
+            return req.json()
+
