@@ -15,12 +15,13 @@ ENV HEKETI_BRANCH="release/8"
 
 # install dependencies, build and cleanup
 RUN mkdir $BUILD_HOME $GOPATH && \
+    dnf -y install glide golang git make glibc-static && \
     dnf -y install glide golang git make mercurial && \
     dnf -y clean all && \
-    mkdir -p $GOPATH/src/github.com/heketi && \
-    cd $GOPATH/src/github.com/heketi && \
-    git clone -b $HEKETI_BRANCH https://github.com/heketi/heketi.git && \
-    cd $GOPATH/src/github.com/heketi/heketi && \
+    mkdir -p $GOPATH/src/github.com/cloud-tools && \
+    cd $GOPATH/src/github.com/cloud-tools && \
+    git clone -b $HEKETI_BRANCH https://github.com/cloud-tools/heketi.git && \
+    cd $GOPATH/src/github.com/cloud-tools/heketi && \
     glide install -v && \
     make && \
     cp heketi /usr/bin/heketi && \

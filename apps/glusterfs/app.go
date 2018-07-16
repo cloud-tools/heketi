@@ -533,6 +533,40 @@ func (a *App) SetRoutes(router *mux.Router) error {
 			Pattern:     "/db/dump",
 			HandlerFunc: a.DbDump},
 
+		// Geo-replication
+		rest.Route{
+			Name:        "GeoReplicationStatus",
+			Method:      "GET",
+			Pattern:     "/georeplication",
+			HandlerFunc: a.GeoReplicationStatus},
+		rest.Route{
+			Name:        "GeoReplicationVolumeStatus",
+			Method:      "GET",
+			Pattern:     "/volumes/{id:[A-Fa-f0-9]+}/georeplication",
+			HandlerFunc: a.GeoReplicationVolumeStatus},
+		rest.Route{
+			Name:        "GeoReplication",
+			Method:      "POST",
+			Pattern:     "/volumes/{id:[A-Fa-f0-9]+}/georeplication",
+			HandlerFunc: a.GeoReplicationPostHandler},
+
+		// Master-slave
+		rest.Route{
+			Name:        "MasterSlaveStatus",
+			Method:      "GET",
+			Pattern:     "/masterslave",
+			HandlerFunc: a.MasterSlaveStatus},
+		rest.Route{
+			Name:        "MasterSlaveClustersStatus",
+			Method:      "GET",
+			Pattern:     "/clusters/{id:[A-Fa-f0-9]+}/masterslave",
+			HandlerFunc: a.MasterSlaveClustersStatus},
+		rest.Route{
+			Name:        "MasterSlave",
+			Method:      "POST",
+			Pattern:     "/clusters/{id:[A-Fa-f0-9]+}/masterslave",
+			HandlerFunc: a.MasterSlaveClusterPostHandler},
+
 		// Logging
 		rest.Route{
 			Name:        "GetLogLevel",

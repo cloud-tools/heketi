@@ -1191,7 +1191,7 @@ func TestVolumeClusterResizeByAddingDevices(t *testing.T) {
 	tests.Assert(t, err == ErrNoSpace)
 }
 
-// Test for https://github.com/heketi/heketi/issues/382:
+// Test for https://github.com/cloud-tools/heketi/issues/382:
 //
 // A TopologyInfo request running concurrently to a
 // VolumeCreate request failed with "Id not found" due

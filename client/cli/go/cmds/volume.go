@@ -50,6 +50,7 @@ func init() {
 	volumeCommand.AddCommand(volumeBlockHostingRestrictionCommand)
 	volumeBlockHostingRestrictionCommand.AddCommand(volumeBlockHostingRestrictionUnlockCommand)
 	volumeBlockHostingRestrictionCommand.AddCommand(volumeBlockHostingRestrictionLockCommand)
+	initGeoRepCommand()
 
 	volumeCreateCommand.Flags().IntVar(&size, "size", 0,
 		"\n\tSize of volume in GiB")
