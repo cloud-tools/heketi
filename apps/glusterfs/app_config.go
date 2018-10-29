@@ -11,8 +11,11 @@ package glusterfs
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/cloud-tools/heketi/executors/kubeexec"
 	"github.com/cloud-tools/heketi/executors/sshexec"
@@ -34,6 +37,10 @@ type GlusterFSConfig struct {
 	//block settings
 	CreateBlockHostingVolumes bool `json:"auto_create_block_hosting_volume"`
 	BlockHostingVolumeSize    int  `json:"block_hosting_volume_size"`
+
+	// server settings
+	// in seconds
+	HttpServerGracefulShutdownTimeout int `json:"http_server_graceful_shutdown_timeout"`
 }
 
 type ConfigFile struct {
@@ -58,6 +65,17 @@ func loadConfiguration(configIo io.Reader) *GlusterFSConfig {
 	env = os.Getenv("HEKETI_GLUSTERAPP_LOGLEVEL")
 	if env != "" {
 		config.GlusterFS.Loglevel = env
+	}
+	env = os.Getenv("HEKETI_HTTP_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT")
+	if env != "" {
+		timeout, err := strconv.Atoi(env)
+
+		if err != nil {
+			panic(errors.New(fmt.Sprintf("Can't convert the HEKETI_HTTP_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT "+
+				"enviroment variable to int type. Env: '%s.' Error: '%s'", env, err.Error())))
+		}
+
+		config.GlusterFS.HttpServerGracefulShutdownTimeout = timeout
 	}
 	return &config.GlusterFS
 }

@@ -10,6 +10,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,10 +20,10 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/gorilla/mux"
 	"github.com/cloud-tools/heketi/apps"
 	"github.com/cloud-tools/heketi/apps/glusterfs"
 	"github.com/cloud-tools/heketi/middleware"
+	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 
@@ -334,10 +335,12 @@ func main() {
 
 	// Create a channel to know if the server was unable to start
 	done := make(chan bool)
+	s := http.Server{Addr: ":" + options.Port, Handler: router}
+
 	go func() {
 		// Start the server.
 		fmt.Printf("Listening on port %v\n", options.Port)
-		err = http.ListenAndServe(":"+options.Port, router)
+		err = s.ListenAndServe()
 		if err != nil {
 			fmt.Printf("ERROR: HTTP Server error: %v\n", err)
 		}
@@ -349,10 +352,14 @@ func main() {
 	case <-signalch:
 	case <-done:
 	}
-	fmt.Printf("Shutting down...\n")
+
+	fmt.Println("Shutting down...")
 
 	// Shutdown the application
-	// :TODO: Need to shutdown the server
+	ctx, _ := context.WithTimeout(context.Background(),
+		time.Duration(glusterfsApp.Conf().HttpServerGracefulShutdownTimeout)*time.Second)
+	s.Shutdown(ctx)
 	app.Close()
 
+	fmt.Println("Server gracefully stopped!")
 }

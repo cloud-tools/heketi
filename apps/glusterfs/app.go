@@ -169,6 +169,10 @@ func NewApp(configIo io.Reader) *App {
 	return app
 }
 
+func (a *App) Conf() *GlusterFSConfig {
+	return a.conf
+}
+
 func (a *App) setLogLevel(level string) {
 	switch level {
 	case "none":
@@ -448,7 +452,6 @@ func (a *App) SetRoutes(router *mux.Router) error {
 }
 
 func (a *App) Close() {
-
 	// Close the DB
 	a.db.Close()
 	logger.Info("Closed")
