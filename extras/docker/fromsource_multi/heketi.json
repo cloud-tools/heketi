@@ -24,6 +24,7 @@
 		"executor" : "mock",
 
 		"_db_comment": "Database file name",
-		"db" : "/var/lib/heketi/heketi.db"
+		"db" : "/var/lib/heketi/heketi.db",
+		"http_server_graceful_shutdown_timeout": 30
 	}
 }

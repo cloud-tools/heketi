@@ -64,4 +64,4 @@ if [[ -d "${BACKUPDB_PATH}" ]]; then
     fi
 fi
 
-/usr/bin/heketi --config=/etc/heketi/heketi.json
+exec /usr/bin/heketi --config=/etc/heketi/heketi.json
