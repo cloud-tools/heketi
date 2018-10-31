@@ -21,6 +21,6 @@ a deployment tool in production.
 
 The original demo for Heketi on OpenShift is provided below:
 
-[![demo](https://github.com/heketi/heketi/wiki/images/aplo_demo.png)](https://asciinema.org/a/50531)
+[![demo](https://github.com/cloud-tools/heketi/wiki/images/aplo_demo.png)](https://asciinema.org/a/50531)
 
 For simplicity, you can deploy an OpenShift cluster using the configured [Heketi Vagrant Demo](https://github.com/heketi/vagrant-heketi)

@@ -18,8 +18,8 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/heketi/tests"
 
-	wdb "github.com/heketi/heketi/pkg/db"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	wdb "github.com/cloud-tools/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 )
 
 func TestCreateNodeHeathCache(t *testing.T) {

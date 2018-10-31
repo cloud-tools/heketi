@@ -10,7 +10,7 @@
 package mockexec
 
 import (
-	"github.com/heketi/heketi/executors"
+	"github.com/cloud-tools/heketi/executors"
 )
 
 type MockExecutor struct {

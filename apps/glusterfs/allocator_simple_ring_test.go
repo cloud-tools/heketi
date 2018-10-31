@@ -10,7 +10,7 @@
 package glusterfs
 
 import (
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/heketi/tests"
 	"reflect"
 	"testing"

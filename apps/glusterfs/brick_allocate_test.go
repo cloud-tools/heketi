@@ -17,7 +17,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/heketi/tests"
 
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 )
 
 func TestClusterDeviceSource(t *testing.T) {

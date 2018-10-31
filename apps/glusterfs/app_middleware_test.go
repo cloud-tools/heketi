@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	//"github.com/boltdb/bolt"
-	wdb "github.com/heketi/heketi/pkg/db"
+	wdb "github.com/cloud-tools/heketi/pkg/db"
 	"github.com/heketi/tests"
 )
 

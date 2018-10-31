@@ -12,9 +12,9 @@ package glusterfs
 import (
 	"fmt"
 
-	"github.com/heketi/heketi/executors"
-	wdb "github.com/heketi/heketi/pkg/db"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/executors"
+	wdb "github.com/cloud-tools/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 
 	"github.com/boltdb/bolt"
 )

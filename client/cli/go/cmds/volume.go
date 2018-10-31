@@ -16,8 +16,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/kubernetes"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/kubernetes"
 	"github.com/spf13/cobra"
 )
 

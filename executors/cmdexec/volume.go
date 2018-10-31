@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/heketi/heketi/executors"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/executors"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/lpabon/godbc"
 )
 

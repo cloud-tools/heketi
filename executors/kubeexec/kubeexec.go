@@ -24,9 +24,9 @@ import (
 	"k8s.io/kubernetes/pkg/client/unversioned/remotecommand"
 	kubeletcmd "k8s.io/kubernetes/pkg/kubelet/server/remotecommand"
 
-	"github.com/heketi/heketi/executors/cmdexec"
-	"github.com/heketi/heketi/pkg/kubernetes"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/executors/cmdexec"
+	"github.com/cloud-tools/heketi/pkg/kubernetes"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/lpabon/godbc"
 )
 
