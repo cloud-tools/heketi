@@ -11,13 +11,14 @@ package glusterfs
 
 import (
 	"fmt"
+	"github.com/cloud-tools/heketi/executors"
 	"net/http"
 	"sync"
 
-	"github.com/cloud-tools/heketi/executors"
-
 	"github.com/lpabon/godbc"
 )
+
+var wg sync.WaitGroup
 
 // OpCounter is used to track and manage how many operations are being
 // processed by the server.
@@ -93,10 +94,14 @@ func AsyncHttpOperation(app *App,
 		return err
 	}
 
+	wg.Add(1)
+
 	app.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
 		// decrement the op counter once the operation is done
 		// either success or failure
 		defer app.opcounter.Dec()
+		defer wg.Done()
+
 		logger.Info("Started async operation: %v", label)
 		if err := op.Exec(app.executor); err != nil {
 			if _, ok := err.(OperationRetryError); ok && op.MaxRetries() > 0 {
@@ -121,6 +126,26 @@ func AsyncHttpOperation(app *App,
 		return op.ResourceUrl(), nil
 	})
 	return nil
+}
+
+func AsyncHttpRedirectFunc(app *App,
+	w http.ResponseWriter,
+	r *http.Request,
+	handlerfunc func() (string, error)) error {
+
+	wg.Add(1)
+
+	app.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+		defer wg.Done()
+
+		return handlerfunc()
+	})
+
+	return nil
+}
+
+func WaitAsyncHttpRedirectFunc() {
+	wg.Wait()
 }
 
 // RunOperation performs all steps of an Operation and returns

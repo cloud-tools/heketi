@@ -19,6 +19,6 @@ import (
 type Application interface {
 	SetRoutes(router *mux.Router) error
 	TopologyInfo() (*api.TopologyInfoResponse, error)
-	Close()
+	Close(s http.Server) int
 	Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 }

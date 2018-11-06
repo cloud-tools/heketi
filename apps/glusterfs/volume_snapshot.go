@@ -12,8 +12,8 @@ import (
 	"errors"
 
 	"github.com/boltdb/bolt"
-	"github.com/heketi/heketi/executors"
-	wdb "github.com/heketi/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/executors"
+	wdb "github.com/cloud-tools/heketi/pkg/db"
 	"github.com/lpabon/godbc"
 )
 

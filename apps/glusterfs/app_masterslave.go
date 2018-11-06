@@ -124,7 +124,7 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 						return err
 					}
 
-					a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+					AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 
 						actionParams := make(map[string]string)
 						actionParams["option"] = "push-pem"
@@ -198,7 +198,7 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 						return err
 					}
 
-					a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+					AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 
 						actionParams := make(map[string]string)
 						actionParams["option"] = "push-pem"
@@ -266,7 +266,7 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 						return err
 					}
 
-					a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+					AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 
 						actionParams := make(map[string]string)
 						actionParams["option"] = "push-pem"
@@ -341,7 +341,7 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 						return err
 					}
 
-					a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+					AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 
 						actionParams := make(map[string]string)
 						actionParams["option"] = "push-pem"

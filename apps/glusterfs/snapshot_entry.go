@@ -14,9 +14,9 @@ import (
 	"encoding/gob"
 
 	"github.com/boltdb/bolt"
-	wdb "github.com/heketi/heketi/pkg/db"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils"
+	wdb "github.com/cloud-tools/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/lpabon/godbc"
 )
 

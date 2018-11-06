@@ -10,11 +10,13 @@
 package glusterfs
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
@@ -312,6 +314,15 @@ func (a *App) setFromEnvironmentalVariable() {
 			a.conf.MaxInflightOperations = uint64(value)
 		}
 	}
+
+	env = os.Getenv("HEKETI_GRACEFUL_SHUTDOWN_TIMEOUT")
+	if "" != env {
+		a.conf.GracefulShutdownTimeout, err = strconv.Atoi(env)
+		if err != nil {
+			logger.LogError("Error: Parse int in Heketi Graceful Shutdown timeout: %v", err)
+		}
+	}
+
 }
 
 func (a *App) setAdvSettings() {
@@ -626,15 +637,36 @@ func (a *App) SetRoutes(router *mux.Router) error {
 	return nil
 }
 
-func (a *App) Close() {
-	// stop the health goroutine
-	if a.nhealth != nil {
-		a.nhealth.Stop()
-	}
+func (a *App) Close(s http.Server) int {
+	c := make(chan struct{})
+	go func() {
+		// stop the health goroutine
+		if a.nhealth != nil {
+			a.nhealth.Stop()
+		}
 
-	// Close the DB
-	a.db.Close()
-	logger.Info("Closed")
+		s.Shutdown(context.Background())
+		logger.Info("Web server exit")
+
+		WaitAsyncHttpRedirectFunc()
+		logger.Info("All async http function finished")
+
+		// Close the DB
+		a.db.Close()
+		logger.Info("All database connection closed")
+		defer close(c)
+	}()
+
+	select {
+	case <-c:
+		logger.Info("Server gracefully stopped!")
+
+		return 0
+	case <-time.After(time.Duration(a.conf.GracefulShutdownTimeout) * time.Second):
+		logger.LogError("Failed to wait until server gracefully stopped")
+
+		return 1
+	}
 }
 
 func (a *App) Backup(w http.ResponseWriter, r *http.Request) {

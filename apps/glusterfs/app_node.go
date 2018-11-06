@@ -113,7 +113,7 @@ func (a *App) NodeAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Add node
 	logger.Info("Adding node %v", node.ManageHostName())
-	a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (seeother string, e error) {
+	AsyncHttpRedirectFunc(a, w, r, func() (seeother string, e error) {
 
 		// Cleanup in case of failure
 		defer func() {
@@ -278,7 +278,7 @@ func (a *App) NodeDelete(w http.ResponseWriter, r *http.Request) {
 
 	// Delete node asynchronously
 	logger.Info("Deleting node %v [%v]", node.ManageHostName(), node.Info.Id)
-	a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+	AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 
 		// Remove from trusted pool
 		if peer_node != nil {
@@ -439,7 +439,7 @@ func (a *App) NodeSetState(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set state
-	a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+	AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 		defer func() {
 			if msg.State == api.EntryStateFailed {
 				a.opcounter.Dec()

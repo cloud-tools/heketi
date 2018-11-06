@@ -212,7 +212,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("For Vol %v Selected host %v from hosts %v", remvol.Info.Id, remvol.Info.Mount.GlusterFS.Hosts[0], remvol.Info.Mount.GlusterFS.Hosts)
 
 		// Create Slave-master geo session without start for switdhower needs
-		a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+		AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 			time.Sleep(60 * time.Second)
 
 			// start sshd on master to init georep session
@@ -289,7 +289,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 
 		// Creater master-slave session
 		// Perform GeoReplication action on volume in an asynchronous function
-		a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+		AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 			time.Sleep(60 * time.Second)
 
 			actionParams := make(map[string]string)

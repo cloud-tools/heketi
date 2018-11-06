@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 : "${HEKETI_PATH:=/var/lib/heketi}"
 : "${BACKUPDB_PATH:=/backupdb}"
@@ -64,4 +65,4 @@ if [[ -d "${BACKUPDB_PATH}" ]]; then
     fi
 fi
 
-/usr/bin/heketi --config=/etc/heketi/heketi.json
+exec /usr/bin/heketi --config=/etc/heketi/heketi.json

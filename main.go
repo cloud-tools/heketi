@@ -405,14 +405,16 @@ func main() {
 
 	// Create a channel to know if the server was unable to start
 	done := make(chan bool)
+	s := http.Server{Addr: ":" + options.Port, Handler: router}
+
 	go func() {
 		// Start the server.
 		if options.EnableTls {
 			fmt.Printf("Listening on port %v with TLS enabled\n", options.Port)
-			err = http.ListenAndServeTLS(":"+options.Port, options.CertFile, options.KeyFile, router)
+			err = s.ListenAndServeTLS(options.CertFile, options.KeyFile)
 		} else {
 			fmt.Printf("Listening on port %v\n", options.Port)
-			err = http.ListenAndServe(":"+options.Port, router)
+			err = s.ListenAndServe()
 		}
 		if err != nil {
 			fmt.Printf("ERROR: HTTP Server error: %v\n", err)
@@ -425,10 +427,9 @@ func main() {
 	case <-signalch:
 	case <-done:
 	}
-	fmt.Printf("Shutting down...\n")
+
+	fmt.Println("Shutting down...")
 
 	// Shutdown the application
-	// :TODO: Need to shutdown the server
-	app.Close()
-
+	os.Exit(app.Close(s))
 }

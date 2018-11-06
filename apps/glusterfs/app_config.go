@@ -45,4 +45,8 @@ type GlusterFSConfig struct {
 
 	// operation retry amounts
 	RetryLimits RetryLimitConfig `json:"operation_retry_limits"`
+
+	// server settings
+	// in seconds
+	GracefulShutdownTimeout int `json:"graceful_shutdown_timeout"`
 }

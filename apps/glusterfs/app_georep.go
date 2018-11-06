@@ -229,7 +229,7 @@ func (a *App) GeoReplicationPostHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Perform GeoReplication action on volume in an asynchronous function
-	a.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
+	AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 		if err := volume.GeoReplicationAction(a.db, a.executor, host, msg); err != nil {
 			return "", err
 		}
