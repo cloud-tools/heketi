@@ -26,6 +26,7 @@
 		"_db_comment": "Database file name",
 		"db" : "/var/lib/heketi/heketi.db",
 		"loglevel": "info",
-		"graceful_shutdown_timeout": 30
+		"graceful_shutdown_timeout": 30,
+		"ignore_stale_operations": true
 	}
 }

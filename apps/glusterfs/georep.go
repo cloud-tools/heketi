@@ -49,6 +49,33 @@ func (v *VolumeEntry) GeoReplicationAction(db *bolt.DB,
 	return nil
 }
 
+func (v *VolumeEntry) GeoReplicationStatus(executor executors.Executor, host string) (string, error) {
+	logger.Debug("In GeoReplicationStatus")
+
+	status, err := executor.GeoReplicationVolumeStatus(host, v.Info.Name)
+	if err != nil {
+		return "", err
+	}
+
+	if len(status.Volume) != 1 {
+		return "", fmt.Errorf("Could not get replication status for volume %s", v.Info.Id)
+	}
+
+	volumeStatus := ""
+
+	for _, pair := range status.Volume[0].Sessions.SessionList[0].Pairs {
+		switch pair.Status {
+		case "Stopped":
+		case "Active":
+			return pair.Status, nil
+		}
+
+		volumeStatus = pair.Status
+	}
+
+	return volumeStatus, nil
+}
+
 //
 // Copyright (c) 2015 The heketi Authors
 //
