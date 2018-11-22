@@ -65,4 +65,6 @@ if [[ -d "${BACKUPDB_PATH}" ]]; then
     fi
 fi
 
+/usr/bin/heketi-backupdb.sh >/dev/null 2>&1 &
+
 exec /usr/bin/heketi --config=/etc/heketi/heketi.json
