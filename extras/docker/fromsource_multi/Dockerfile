@@ -37,6 +37,7 @@ LABEL description="Development build"
 
 ADD ./heketi.json /etc/heketi/heketi.json
 ADD ./heketi-start.sh /usr/bin/heketi-start.sh
+ADD ./heketi-backupdb.sh /usr/bin/heketi-backupdb.sh
 
 RUN mkdir /var/lib/heketi && \
     apk add --no-cache --update ca-certificates bash util-linux libc6-compat
