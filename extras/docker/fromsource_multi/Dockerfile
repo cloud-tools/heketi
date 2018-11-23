@@ -41,8 +41,8 @@ ADD ./heketi-backupdb.sh /usr/bin/heketi-backupdb.sh
 
 RUN mkdir /var/lib/heketi && \
     apk add --no-cache --update ca-certificates bash util-linux libc6-compat && \
-    cmhod +x /usr/bin/heketi-backupdb.sh && \
-    cmhod +x /usr/bin/heketi-start.sh
+    chmod +x /usr/bin/heketi-backupdb.sh && \
+    chmod +x /usr/bin/heketi-start.sh
     
 
 VOLUME /etc/heketi
