@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 : "${HEKETI_PATH:=/var/lib/heketi}"
 : "${BACKUPDB_PATH:=/backupdb}"
