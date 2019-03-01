@@ -42,9 +42,9 @@ ADD ./heketi-backupdb.sh /usr/bin/heketi-backupdb.sh
 RUN mkdir /var/lib/heketi && \
     apk add --no-cache --update ca-certificates bash util-linux libc6-compat && \
     chmod +x /usr/bin/heketi-backupdb.sh && \
-    chmod +x /usr/bin/heketi-start.sh
+    chmod +x /usr/bin/heketi-start.sh && \
+    [[ ! -e /etc/nsswitch.conf ]] && echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' > /etc/nsswitch.conf
     
-
 VOLUME /etc/heketi
 VOLUME /var/lib/heketi
 
