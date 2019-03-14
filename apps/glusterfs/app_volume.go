@@ -16,12 +16,13 @@ import (
 	"net/http"
 	"strings"
 
+	"time"
+
 	"github.com/boltdb/bolt"
-	"github.com/gorilla/mux"
 	"github.com/cloud-tools/heketi/pkg/db"
 	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 	"github.com/cloud-tools/heketi/pkg/utils"
-	"time"
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -213,8 +214,6 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 
 		// Create Slave-master geo session without start for switdhower needs
 		AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
-			time.Sleep(60 * time.Second)
-
 			// start sshd on master to init georep session
 			sshonerr := a.MasterSlaveSshdSet("start", masterSshCluster)
 			if sshonerr != nil {
@@ -290,7 +289,6 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 		// Creater master-slave session
 		// Perform GeoReplication action on volume in an asynchronous function
 		AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
-			time.Sleep(60 * time.Second)
 
 			actionParams := make(map[string]string)
 			actionParams["option"] = "push-pem"

@@ -13,6 +13,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/cloud-tools/heketi/executors"
 	"github.com/lpabon/godbc"
@@ -41,10 +42,17 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	}
 
 	commands := []string{cmd}
-	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-		return err
+	for i := 0; ; i++ {
+		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
+			if i >= (100 - 1) {
+				break
+				return err
+			}
+			time.Sleep(3 * time.Second)
+		} else {
+			break
+		}
 	}
-
 	return nil
 }
 
