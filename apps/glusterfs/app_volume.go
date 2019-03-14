@@ -176,8 +176,19 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 	if a.conf.RetryLimits.VolumeCreate > 0 {
 		vc.maxRetries = a.conf.RetryLimits.VolumeCreate
 	}
-	if err := AsyncHttpOperation(a, w, r, vc); err != nil {
-		OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
+
+	for i := 0; ; i++ {
+		if err := AsyncHttpOperation(a, w, r, vc); err != nil {
+			if i >= 6 {
+				OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
+				fmt.Sprintf("Failed to allocate new replicated volume: %v", err)
+				break
+				return
+			}
+			time.Sleep(10 * time.Second)
+		} else {
+			break
+		}
 		return
 	}
 
@@ -202,10 +213,18 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 			remvc.maxRetries = a.conf.RetryLimits.VolumeCreate
 		}
 
-		if err := AsyncHttpOperation(a, w, r, remvc); err != nil {
-			http.Error(w,
-				fmt.Sprintf("Failed to allocate new replicated volume: %v", err),
-				http.StatusInternalServerError)
+		for i := 0; ; i++ {
+			if err := AsyncHttpOperation(a, w, r, remvc); err != nil {
+				if i >= 6 {
+					OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
+					fmt.Sprintf("Failed to allocate new replicated volume: %v", err)
+					break
+					return
+				}
+				time.Sleep(10 * time.Second)
+			} else {
+				break
+			}
 			return
 		}
 
