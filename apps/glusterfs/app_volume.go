@@ -287,7 +287,6 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 		})
 
 		// Creater master-slave session
-		// Perform GeoReplication action on volume in an asynchronous function
 		AsyncHttpRedirectFunc(a, w, r, func() (string, error) {
 
 			actionParams := make(map[string]string)
@@ -375,7 +374,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 			logger.Info("Geo-Replication is started for volume: %v \n", masterVolume)
 
 			// 2do : check if vol created
-			time.Sleep(30 * time.Second)
+			time.Sleep(5 * time.Second)
 			// disable sshd on master
 			sshofferr := a.MasterSlaveSshdSet("stop", masterSshCluster)
 			if sshofferr != nil {
