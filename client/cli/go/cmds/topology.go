@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 	"github.com/spf13/cobra"
@@ -45,7 +46,7 @@ type ConfigFileCluster struct {
 	Nodes []ConfigFileNode `json:"nodes"`
 	Block *bool            `json:"block,omitempty"`
 	File  *bool            `json:"file,omitempty"`
-	Side  *string		   `json:"side,omitempty"` //left,right
+	Side  *string          `json:"side,omitempty"` //left,right
 }
 type ConfigFile struct {
 	Clusters []ConfigFileCluster `json:"clusters"`
@@ -313,13 +314,12 @@ var topologyLoadCommand = &cobra.Command{
 		fmt.Printf("Right Cluster ID: %v\n", rightCluster.Id)
 
 		err = heketi.MasterClusterSlavePostAction(leftCluster.Id, &req)
-
 		if err != nil {
 			return err
 		}
 
 		fmt.Printf("Cluster %v marked as 'master'. Cluster %v marked as 'slave'\n", leftCluster.Id, rightCluster.Id)
-
+		time.Sleep(7 * time.Second)
 		return nil
 	},
 }

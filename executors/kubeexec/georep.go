@@ -44,7 +44,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	commands := []string{cmd}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-			if i >= (100 - 1) {
+			if i >= 100 {
 				break
 				return err
 			}
@@ -74,7 +74,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 	commands := []string{cmd}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-			if i >= (100 - 1) {
+			if i >= 100 {
 				break
 				return err
 			}

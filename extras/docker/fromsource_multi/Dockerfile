@@ -28,7 +28,6 @@ RUN cd $GOPATH/src/github.com/cloud-tools/heketi && \
     cp heketi /usr/bin/heketi && \
     cp client/cli/go/heketi-cli /usr/bin/heketi-cli 
 
-
 # post install config and volume setup
 FROM alpine:latest
 

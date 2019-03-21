@@ -109,7 +109,12 @@ func createHeketiStorageVolume(c *client.Client, dt api.DurabilityType, replicaC
 		if err != nil {
 			return nil, err
 		}
-
+		if cluster.Status == "slave" {
+			continue
+		}
+		if cluster.Status == "Slave" {
+			continue
+		}
 		// Go through all the volumes checking the names
 		for _, volumeId := range cluster.Volumes {
 			volume, err := c.VolumeInfo(volumeId)
