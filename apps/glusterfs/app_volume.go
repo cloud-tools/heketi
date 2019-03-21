@@ -177,18 +177,8 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 		vc.maxRetries = a.conf.RetryLimits.VolumeCreate
 	}
 
-	for i := 0; ; i++ {
-		if err := AsyncHttpOperation(a, w, r, vc); err != nil {
-			if i >= 6 {
-				OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
-				fmt.Sprintf("Failed to allocate new replicated volume: %v", err)
-				break
-				return
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
-		}
+	if err := AsyncHttpOperation(a, w, r, vc); err != nil {
+		OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
 		return
 	}
 
@@ -213,18 +203,8 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 			remvc.maxRetries = a.conf.RetryLimits.VolumeCreate
 		}
 
-		for i := 0; ; i++ {
-			if err := AsyncHttpOperation(a, w, r, remvc); err != nil {
-				if i >= 6 {
-					OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
-					fmt.Sprintf("Failed to allocate new replicated volume: %v", err)
-					break
-					return
-				}
-				time.Sleep(10 * time.Second)
-			} else {
-				break
-			}
+		if err := AsyncHttpOperation(a, w, r, vc); err != nil {
+			OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
 			return
 		}
 
@@ -393,7 +373,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 			logger.Info("Geo-Replication is started for volume: %v \n", masterVolume)
 
 			// 2do : check if vol created
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 			// disable sshd on master
 			sshofferr := a.MasterSlaveSshdSet("stop", masterSshCluster)
 			if sshofferr != nil {
