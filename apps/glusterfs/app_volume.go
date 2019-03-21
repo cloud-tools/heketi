@@ -203,7 +203,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 			remvc.maxRetries = a.conf.RetryLimits.VolumeCreate
 		}
 
-		if err := AsyncHttpOperation(a, w, r, vc); err != nil {
+		if err := AsyncHttpOperation(a, w, r, remvc); err != nil {
 			OperationHttpErrorf(w, err, "Failed to allocate new volume: %v", err)
 			return
 		}

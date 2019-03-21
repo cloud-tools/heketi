@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	VOLUME_MAX_RETRIES int = 12
+	VOLUME_MAX_RETRIES int = 20
 )
 
 type OperationRetryError struct {
