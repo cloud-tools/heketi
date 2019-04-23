@@ -39,7 +39,7 @@ ADD ./heketi-start.sh /usr/bin/heketi-start.sh
 ADD ./heketi-backupdb.sh /usr/bin/heketi-backupdb.sh
 
 RUN mkdir /var/lib/heketi && \
-    apk add --no-cache --update ca-certificates bash util-linux libc6-compat && \
+    apk add --no-cache --update ca-certificates bash util-linux libc6-compat curl iproute2 && \
     chmod +x /usr/bin/heketi-backupdb.sh && \
     chmod +x /usr/bin/heketi-start.sh && \
     [[ ! -e /etc/nsswitch.conf ]] && echo 'hosts: files mdns4_minimal [NOTFOUND=return] dns mdns4' > /etc/nsswitch.conf
