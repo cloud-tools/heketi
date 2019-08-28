@@ -62,13 +62,13 @@ func (s *SshExecutor) GeoReplicationAction(host, volume, action string, geoRep *
 	godbc.Require(geoRep.SlaveHost != "")
 	godbc.Require(geoRep.SlaveVolume != "")
 
-	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
+	switch_cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
 
 	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
-		cmd = fmt.Sprintf("%s %s", cmd, force)
+		switch_cmd = fmt.Sprintf("%s %s", switch_cmd, force)
 	}
 
-	commands := []string{cmd}
+	commands := []string{switch_cmd}
 	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 		return err
 	}
