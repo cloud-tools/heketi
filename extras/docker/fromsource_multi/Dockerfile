@@ -3,10 +3,11 @@
 # need to set 26 insead of latest 
 FROM fedora:26 as builder 
 
+ARG SOURCE_BRANCH="release-8/georeplication"
+
 ENV BUILD_HOME=/build
 ENV GOPATH=$BUILD_HOME/golang
 ENV PATH=$GOPATH/bin:$PATH
-ENV SOURCE_BRANCH="release-8/georeplication"
 ENV GOSTATIC=static
 
 # install dependencies, build and cleanup
