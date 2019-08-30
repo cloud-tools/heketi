@@ -3,6 +3,7 @@ updated: 2017-12-18T16:46:06.7851579+05:30
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
+  vcs: hg
 - name: github.com/asaskevich/govalidator
   version: 593d64559f7600f29581a3ee42177f5dbded27a9
 - name: github.com/auth0/go-jwt-middleware
