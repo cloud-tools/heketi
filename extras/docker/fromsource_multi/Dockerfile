@@ -3,7 +3,7 @@
 # need to set 26 insead of latest 
 FROM fedora:26 as builder 
 
-ARG SOURCE_BRANCH="release-8/georeplication"
+ARG HEKETI_BRANCH="release-8/georeplication"
 
 ENV BUILD_HOME=/build
 ENV GOPATH=$BUILD_HOME/golang
@@ -17,7 +17,7 @@ RUN mkdir $BUILD_HOME $GOPATH && \
 
 RUN mkdir -p $GOPATH/src/github.com/cloud-tools && \
     cd $GOPATH/src/github.com/cloud-tools && \
-    git clone -b $SOURCE_BRANCH https://github.com/cloud-tools/heketi.git && \
+    git clone -b $HEKETI_BRANCH https://github.com/cloud-tools/heketi.git && \
     cd $GOPATH/src/github.com/cloud-tools/heketi && \
     glide install -v 
 
