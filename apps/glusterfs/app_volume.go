@@ -158,8 +158,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 
 	if len(MasterCluster) != 0 {
 		// todo: here set options to msg
-		msg.GlusterVolumeOptions = append(msg.GlusterVolumeOptions, "read-only on")
-		msg.GlusterVolumeOptions = append(msg.GlusterVolumeOptions, "changelog.changelog off")
+		msg.GlusterVolumeOptions = []string{"read-only on", "changelog.changelog off"}
 		remvol := NewVolumeEntryFromRequest(&msg)
 
 		vol.Info.Remvolid = remvol.Info.Id
