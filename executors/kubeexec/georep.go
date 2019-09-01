@@ -19,6 +19,22 @@ import (
 	"github.com/lpabon/godbc"
 )
 
+func cmdReadOnly(volName string, enabled bool) string {
+	if enabled {
+		return fmt.Sprintf("gluster --mode=script volume set %s read-only on", volName)
+	} else {
+		return fmt.Sprintf("gluster --mode=script volume set %s read-only off", volName)
+	}
+}
+
+func cmdChangelog(volName string, enabled bool) string {
+	if enabled {
+		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog on", volName)
+	} else {
+		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog off", volName)
+	}
+}
+
 // GeoReplicationCreate creates a geo-rep session for the given volume
 func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executors.GeoReplicationRequest) error {
 	logger.Debug("In GeoReplicationCreate")
@@ -41,7 +57,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 		cmd = fmt.Sprintf("%s %s", cmd, "force")
 	}
 
-	commands := []string{cmd}
+	commands := []string{cmd, cmdReadOnly(volume, true), cmdChangelog(volume, false)}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 			if i >= 100 {
