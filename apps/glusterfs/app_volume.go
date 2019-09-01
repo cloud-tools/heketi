@@ -157,8 +157,6 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(MasterCluster) != 0 {
-		// todo: here set options to msg
-		msg.GlusterVolumeOptions = []string{"read-only on", "changelog.changelog off"}
 		remvol := NewVolumeEntryFromRequest(&msg)
 
 		vol.Info.Remvolid = remvol.Info.Id
@@ -231,12 +229,12 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 						}
 
 						id := remvol.Info.Id
-						var masterVolume *VolumeEntry
+						var remVolume *VolumeEntry
 						var host string
 
 						err = a.db.View(func(tx *bolt.Tx) error {
-							masterVolume, err = NewVolumeEntryFromId(tx, id)
-							logger.Debug("For volume geo %v with id %v geo \n", masterVolume, masterVolume.Info.Id)
+							remVolume, err = NewVolumeEntryFromId(tx, id)
+							logger.Debug("For volume geo %v with id %v geo \n", remVolume, remVolume.Info.Id)
 
 							if err == ErrNotFound {
 								logger.LogError("[ERROR] Volume Id not found: %v \n", err)
@@ -246,7 +244,7 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 								return err
 							}
 
-							cluster, err := NewClusterEntryFromId(tx, masterVolume.Info.Cluster)
+							cluster, err := NewClusterEntryFromId(tx, remVolume.Info.Cluster)
 							if err == ErrNotFound {
 								return err
 							} else if err != nil {
@@ -273,11 +271,11 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 						}
 
 						logger.Debug("Creating geo replicate with request %v \n", geoRepCreateRequest)
-						if err := masterVolume.GeoReplicationAction(a.db, a.executor, host, geoRepCreateRequest); err != nil {
+						if err := remVolume.GeoReplicationAction(a.db, a.executor, host, geoRepCreateRequest); err != nil {
 							return "", err
 						}
 
-						return "/volumes/" + masterVolume.Info.Id + "/georeplication", nil
+						return "/volumes/" + remVolume.Info.Id + "/georeplication", nil
 					})
 
 					// Creater master-slave session
