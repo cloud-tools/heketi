@@ -91,9 +91,9 @@ func (s *SshExecutor) GeoReplicationAction(host, volume, action string, geoRep *
 	commands := []string{cmd}
 	apiAction := api.GeoReplicationActionType(action)
 	if apiAction == api.GeoReplicationActionStart {
-		commands := append(commands, cmdReadOnlyEnabled(volume, false), cmdChangelogsEnabled(volume, true))
+		commands = append(commands, cmdReadOnlyEnabled(volume, false), cmdChangelogsEnabled(volume, true))
 	} else if apiAction == api.GeoReplicationActionStop {
-		commands := append(commands, cmdReadOnlyEnabled(volume, true), cmdChangelogsEnabled(volume, false))
+		commands = append(commands, cmdReadOnlyEnabled(volume, true), cmdChangelogsEnabled(volume, false))
 	}
 
 	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
