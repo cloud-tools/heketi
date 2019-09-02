@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+
 	"github.com/cloud-tools/heketi/executors"
 	"github.com/lpabon/godbc"
 )
@@ -87,7 +89,8 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 		cmd = fmt.Sprintf("%s %s", cmd, force)
 	}
 
-	commands := []string{cmd}
+	starting := (action == api.GeoReplicationActionStart)
+	commands := []string{cmd, cmdReadOnly(volume, !starting), cmdChangelog(volume, starting)}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 			if i >= 100 {
