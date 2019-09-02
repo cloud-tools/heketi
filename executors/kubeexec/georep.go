@@ -89,7 +89,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 		cmd = fmt.Sprintf("%s %s", cmd, force)
 	}
 
-	starting := (action == api.GeoReplicationActionStart)
+	starting := (action == string(api.GeoReplicationActionStart))
 	commands := []string{cmd, cmdReadOnly(volume, !starting), cmdChangelog(volume, starting)}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
