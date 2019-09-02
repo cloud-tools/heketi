@@ -1,4 +1,3 @@
 #!/bin/bash
-set -x
-pwd
+
 docker build --build-arg HEKETI_BRANCH=$SOURCE_BRANCH -t $IMAGE_NAME .
