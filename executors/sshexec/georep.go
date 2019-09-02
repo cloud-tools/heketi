@@ -88,6 +88,7 @@ func (s *SshExecutor) GeoReplicationAction(host, volume, action string, geoRep *
 		cmd = fmt.Sprintf("%s %s", cmd, force)
 	}
 
+	commands := []string{cmd}
 	apiAction := api.GeoReplicationActionType(action)
 	if apiAction == api.GeoReplicationActionStart {
 		commands := append(commands, cmdReadOnlyEnabled(volume, false), cmdChangelogsEnabled(volume, true))
