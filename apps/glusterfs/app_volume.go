@@ -199,7 +199,6 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 			for i := 0; ; i++ {
 				if volumeInfo, err := volumeInfo(tx, vol.Info.Id); err != nil {
 					if i >= 100 {
-						break
 						return err
 					}
 					time.Sleep(3 * time.Second)
