@@ -15,9 +15,27 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+
 	"github.com/cloud-tools/heketi/executors"
 	"github.com/lpabon/godbc"
 )
+
+func cmdReadOnlyEnabled(volName string, enabled bool) string {
+	if enabled {
+		return fmt.Sprintf("gluster --mode=script volume set %s read-only on", volName)
+	} else {
+		return fmt.Sprintf("gluster --mode=script volume set %s read-only off", volName)
+	}
+}
+
+func cmdChangelogsEnabled(volName string, enabled bool) string {
+	if enabled {
+		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog on", volName)
+	} else {
+		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog off", volName)
+	}
+}
 
 // GeoReplicationCreate creates a geo-rep session for the given volume
 func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executors.GeoReplicationRequest) error {
@@ -41,11 +59,11 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 		cmd = fmt.Sprintf("%s %s", cmd, "force")
 	}
 
-	commands := []string{cmd}
+	// create session and then make volume read-only with disabled changelogs
+	commands := []string{cmd, cmdReadOnlyEnabled(volume, true), cmdChangelogsEnabled(volume, false)}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 			if i >= 100 {
-				break
 				return err
 			}
 			time.Sleep(3 * time.Second)
@@ -72,11 +90,17 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 	}
 
 	commands := []string{cmd}
+	apiAction := api.GeoReplicationActionType(action)
+	if apiAction == api.GeoReplicationActionStart {
+		commands = append(commands, cmdReadOnlyEnabled(volume, false), cmdChangelogsEnabled(volume, true))
+	} else if apiAction == api.GeoReplicationActionStop {
+		commands = append(commands, cmdReadOnlyEnabled(volume, true), cmdChangelogsEnabled(volume, false))
+	}
+
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 			if i >= 100 {
-				break
-				return err
+				return err 
 			}
 			time.Sleep(3 * time.Second)
 		} else {
