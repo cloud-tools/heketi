@@ -51,7 +51,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 		cmd = fmt.Sprintf("%s %s", cmd, "force")
 	}
 
-	// create session and then make volume read-only with disabled changelogs
+	// create session and then make volume read-only
 	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
