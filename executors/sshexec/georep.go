@@ -56,7 +56,7 @@ func (s *SshExecutor) GeoReplicationCreate(host, volume string, geoRep *executor
 		cmd = fmt.Sprintf("%s %s", cmd, "force")
 	}
 
-	// create session and then make volume read-only with disabled changelogs
+	// create session and then make volume read-only
 	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
 	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 		return err
