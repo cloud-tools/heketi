@@ -25,14 +25,6 @@ var (
 	logger = utils.NewLogger("[cmdexec]", utils.LEVEL_DEBUG)
 )
 
-func cmdReadOnlyEnabled(volName string, enabled bool) string {
-	if enabled {
-		return fmt.Sprintf("gluster --mode=script volume set %s read-only on", volName)
-	} else {
-		return fmt.Sprintf("gluster --mode=script volume set %s read-only off", volName)
-	}
-}
-
 func cmdChangelogsEnabled(volName string, enabled bool) string {
 	if enabled {
 		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog on", volName)
@@ -64,8 +56,8 @@ func (s *SshExecutor) GeoReplicationCreate(host, volume string, geoRep *executor
 		cmd = fmt.Sprintf("%s %s", cmd, "force")
 	}
 
-	// create session and then make volume read-only with disabled changelogs
-	commands := []string{cmd, cmdReadOnlyEnabled(volume, true), cmdChangelogsEnabled(volume, false)}
+	// create session and then make volume read-only
+	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
 	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 		return err
 	}
@@ -91,9 +83,9 @@ func (s *SshExecutor) GeoReplicationAction(host, volume, action string, geoRep *
 	commands := []string{cmd}
 	apiAction := api.GeoReplicationActionType(action)
 	if apiAction == api.GeoReplicationActionStart {
-		commands = append(commands, cmdReadOnlyEnabled(volume, false), cmdChangelogsEnabled(volume, true))
+		commands = append(commands, cmdChangelogsEnabled(volume, true))
 	} else if apiAction == api.GeoReplicationActionStop {
-		commands = append(commands, cmdReadOnlyEnabled(volume, true), cmdChangelogsEnabled(volume, false))
+		commands = append(commands, cmdChangelogsEnabled(volume, false))
 	}
 
 	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
