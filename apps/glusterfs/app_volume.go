@@ -366,11 +366,11 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 						// 2do : check if rem georep created
 						time.Sleep(10 * time.Second)
 
-						// disable sshd on master
-						sshofferr := a.MasterSlaveSshdSet("stop", masterSshCluster)
-						if sshofferr != nil {
-							logger.LogError("Error during stop ssh : %v \n", sshofferr)
-						}
+						/*						// disable sshd on master
+												sshofferr := a.MasterSlaveSshdSet("stop", masterSshCluster)
+												if sshofferr != nil {
+													logger.LogError("Error during stop ssh : %v \n", sshofferr)
+												}*/
 
 						return "/volumes/" + masterVolume.Info.Id + "/georeplication", nil
 
@@ -477,6 +477,7 @@ func (a *App) VolumeDelete(w http.ResponseWriter, r *http.Request) {
 	MasterCluster := []string{}
 	MasterCluster, _ = a.MasterSlaveClustersCheck()
 
+	// check if we can delete MAIN volume
 	var volume *VolumeEntry
 	err := a.db.View(func(tx *bolt.Tx) error {
 
@@ -528,12 +529,14 @@ func (a *App) VolumeDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if we can, then delete it
 	vdel := NewVolumeDeleteOperation(volume, a.db)
 	if err := AsyncHttpOperation(a, w, r, vdel); err != nil {
 		OperationHttpErrorf(w, err, "Failed to set up volume delete: %v", err)
 		return
 	}
 
+	// check if remote volume was found and exist
 	if remotevolumeid != "" {
 		logger.Debug("For remote Volume id %v \n", remotevolumeid)
 		var volume *VolumeEntry
@@ -579,6 +582,8 @@ func (a *App) VolumeDelete(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+
+		// delete remote volume
 		vdel := NewVolumeDeleteOperation(volume, a.db)
 		if err := AsyncHttpOperation(a, w, r, vdel); err != nil {
 			http.Error(w,
