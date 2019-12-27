@@ -96,7 +96,7 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 			return err
 		}
 
-		entry, err := NewClusterEntryFromId(tx, l)
+		entry, err := NewClusterEntryFromId(tx, id)
 		if msg.Remoteid != "" {
 			entry.Info.Remoteid = msg.Remoteid
 		}
