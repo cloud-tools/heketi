@@ -366,12 +366,6 @@ func (a *App) VolumeCreate(w http.ResponseWriter, r *http.Request) {
 						// 2do : check if rem georep created
 						time.Sleep(10 * time.Second)
 
-						/*						// disable sshd on master
-												sshofferr := a.MasterSlaveSshdSet("stop", masterSshCluster)
-												if sshofferr != nil {
-													logger.LogError("Error during stop ssh : %v \n", sshofferr)
-												}*/
-
 						return "/volumes/" + masterVolume.Info.Id + "/georeplication", nil
 
 					})
