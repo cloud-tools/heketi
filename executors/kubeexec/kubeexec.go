@@ -157,7 +157,7 @@ func NewKubeExecutor(config *KubeConfig) (*KubeExecutor, error) {
 func (k *KubeExecutor) RemoteCommandExecute(host string,
 	commands []string,
 	timeoutMinutes int) ([]string, error) {
-	logger.Debug("Request to execute command '%s' on host %s", commands, host)
+	logger.Debug("Request to execute command '%v' on host %v", commands, host)
 	// Throttle
 	k.AccessConnection(host)
 	defer k.FreeConnection(host)
@@ -232,7 +232,7 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 		var berr bytes.Buffer
 
 		// Excute command
-		logger.Debug("Executing command '%s' on host %s", commands, host)
+		logger.Debug("Executing command '%v' on host %v", commands, host)
 		err = exec.Stream(remotecommand.StreamOptions{
 			SupportedProtocols: kubeletcmd.SupportedStreamingProtocols,
 			Stdout:             &b,
