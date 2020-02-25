@@ -55,6 +55,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
+		    logger.Debug("Error %v when performing commands: %v host: %+v volume: %+v trying to retry", err, commands, host, volume)
 			if i >= 100 {
 				return err
 			}
@@ -63,6 +64,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 			break
 		}
 	}
+	logger.Debug("Successfully executed commands: %v host: %+v volume: %+v", commands, host, volume)
 	return nil
 }
 
@@ -91,6 +93,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 
 	for i := 0; ; i++ {
 		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
+		    logger.Debug("Error %v when performing commands: %v host: %+v volume: %+v action: %+v trying to retry", err, commands, host, volume, action)
 			if i >= 100 {
 				return err
 			}
@@ -99,6 +102,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 			break
 		}
 	}
+	logger.Debug("Successfully executed commands: %v host: %+v volume: %+v action: %+v", commands, host, volume, action)
 	return nil
 }
 
