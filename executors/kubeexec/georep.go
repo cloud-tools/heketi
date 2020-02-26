@@ -52,11 +52,10 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	}
 
 	// create session and then make volume read-only
-	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
+	cmd_changelog := cmdChangelogsEnabled(volume, false)
 	for i := 0; ; i++ {
-		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-		    logger.Debug("Error %v when performing commands: %v host: %+v volume: %+v trying to retry", err, commands, host, volume)
-			if i >= 100 {
+		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd }, 10); err != nil {
+			if i >= 50 {
 				return err
 			}
 			time.Sleep(3 * time.Second)
@@ -64,7 +63,16 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 			break
 		}
 	}
-	logger.Debug("Successfully executed commands: %v host: %+v volume: %+v", commands, host, volume)
+	for i := 0; ; i++ {
+		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd_changelog }, 10); err != nil {
+			if i >= 50 {
+				return err
+			}
+			time.Sleep(3 * time.Second)
+		} else {
+			break
+		}
+	}
 	return nil
 }
 
@@ -83,18 +91,17 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 		cmd = fmt.Sprintf("%s %s", cmd, force)
 	}
 
-	commands := []string{cmd}
+	cmd_changelog := ""
 	apiAction := api.GeoReplicationActionType(action)
 	if apiAction == api.GeoReplicationActionStart {
-		commands = append(commands, cmdChangelogsEnabled(volume, true))
+		cmd_changelog = cmdChangelogsEnabled(volume, true)
 	} else if apiAction == api.GeoReplicationActionStop {
-		commands = append(commands, cmdChangelogsEnabled(volume, false))
+		cmd_changelog = cmdChangelogsEnabled(volume, false)
 	}
 
 	for i := 0; ; i++ {
-		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-		    logger.Debug("Error %v when performing commands: %v host: %+v volume: %+v action: %+v trying to retry", err, commands, host, volume, action)
-			if i >= 100 {
+		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd }, 10); err != nil {
+			if i >= 50 {
 				return err
 			}
 			time.Sleep(3 * time.Second)
@@ -102,7 +109,18 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 			break
 		}
 	}
-	logger.Debug("Successfully executed commands: %v host: %+v volume: %+v action: %+v", commands, host, volume, action)
+	if cmd_changelog != "" {
+	    for i := 0; ; i++ {
+		    if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd_changelog }, 10); err != nil {
+			    if i >= 50 {
+				    return err
+			    }
+			    time.Sleep(3 * time.Second)
+		    } else {
+			    break
+		    }
+    	}
+	}
 	return nil
 }
 
