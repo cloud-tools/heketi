@@ -52,27 +52,19 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	}
 
 	// create session and then make volume read-only
-	cmd_changelog := cmdChangelogsEnabled(volume, false)
-	for i := 0; ; i++ {
-		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd }, 10); err != nil {
-			if i >= 50 {
-				return err
-			}
-			time.Sleep(3 * time.Second)
-		} else {
-			break
-		}
-	}
-	for i := 0; ; i++ {
-		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd_changelog }, 10); err != nil {
-			if i >= 50 {
-				return err
-			}
-			time.Sleep(3 * time.Second)
-		} else {
-			break
-		}
-	}
+	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
+    for _, command := range commands {
+	    for i := 0; ; i++ {
+		    if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ command }, 10); err != nil {
+			    if i >= 50 {
+				    return err
+			    }
+			    time.Sleep(3 * time.Second)
+		    } else {
+			    break
+            }
+	    }
+    }
 	return nil
 }
 
@@ -91,36 +83,26 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 		cmd = fmt.Sprintf("%s %s", cmd, force)
 	}
 
-	cmd_changelog := ""
+	commands := []string{cmd}
 	apiAction := api.GeoReplicationActionType(action)
 	if apiAction == api.GeoReplicationActionStart {
-		cmd_changelog = cmdChangelogsEnabled(volume, true)
+		commands = append(commands, cmdChangelogsEnabled(volume, true))
 	} else if apiAction == api.GeoReplicationActionStop {
-		cmd_changelog = cmdChangelogsEnabled(volume, false)
+		commands = append(commands, cmdChangelogsEnabled(volume, false))
 	}
 
-	for i := 0; ; i++ {
-		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd }, 10); err != nil {
-			if i >= 50 {
-				return err
-			}
-			time.Sleep(3 * time.Second)
-		} else {
-			break
-		}
-	}
-	if cmd_changelog != "" {
+    for _, command := range commands {
 	    for i := 0; ; i++ {
-		    if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ cmd_changelog }, 10); err != nil {
+		    if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ command }, 10); err != nil {
 			    if i >= 50 {
 				    return err
 			    }
 			    time.Sleep(3 * time.Second)
 		    } else {
 			    break
-		    }
-    	}
-	}
+            }
+	    }
+    }
 	return nil
 }
 
