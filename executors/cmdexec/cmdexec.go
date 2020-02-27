@@ -41,6 +41,7 @@ func (s *CmdExecutor) AccessConnection(host string) {
 	)
 
 	s.Lock.Lock()
+	logger.Debug("Currently acquired locks: %v", s.Throttlemap)
 	if c, ok = s.Throttlemap[host]; !ok {
 		c = make(chan bool, 1)
 		s.Throttlemap[host] = c
@@ -48,6 +49,7 @@ func (s *CmdExecutor) AccessConnection(host string) {
 	s.Lock.Unlock()
 
 	c <- true
+	logger.Debug("Acquired connection for %v", host)
 }
 
 func (s *CmdExecutor) FreeConnection(host string) {
@@ -56,6 +58,7 @@ func (s *CmdExecutor) FreeConnection(host string) {
 	s.Lock.Unlock()
 
 	<-c
+	logger.Debug("Freed connection for %v", host)
 }
 
 func (s *CmdExecutor) SetLogLevel(level string) {
