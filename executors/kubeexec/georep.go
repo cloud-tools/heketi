@@ -53,18 +53,18 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 
 	// create session and then make volume read-only
 	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
-    for _, command := range commands {
-	    for i := 0; ; i++ {
-		    if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ command }, 10); err != nil {
-			    if i >= 50 {
-				    return err
-			    }
-			    time.Sleep(3 * time.Second)
-		    } else {
-			    break
-            }
-	    }
-    }
+	for _, command := range commands {
+		for i := 0; ; i++ {
+			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 2); err != nil {
+				if i >= 50 {
+					return err
+				}
+				time.Sleep(3 * time.Second)
+			} else {
+				break
+			}
+		}
+	}
 	return nil
 }
 
@@ -91,18 +91,18 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 		commands = append(commands, cmdChangelogsEnabled(volume, false))
 	}
 
-    for _, command := range commands {
-	    for i := 0; ; i++ {
-		    if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{ command }, 10); err != nil {
-			    if i >= 50 {
-				    return err
-			    }
-			    time.Sleep(3 * time.Second)
-		    } else {
-			    break
-            }
-	    }
-    }
+	for _, command := range commands {
+		for i := 0; ; i++ {
+			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 2); err != nil {
+				if i >= 50 {
+					return err
+				}
+				time.Sleep(3 * time.Second)
+			} else {
+				break
+			}
+		}
+	}
 	return nil
 }
 
