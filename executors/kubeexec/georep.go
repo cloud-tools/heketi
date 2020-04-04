@@ -45,11 +45,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	if geoRep.SlaveSSHPort != 0 {
 		sshPort = fmt.Sprintf(" ssh-port %d ", geoRep.SlaveSSHPort)
 	}
-	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s create%s%s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, sshPort, geoRep.ActionParams["option"])
-
-	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
-		cmd = fmt.Sprintf("%s %s", cmd, "force")
-	}
+	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s create%s%s force", volume, geoRep.SlaveHost, geoRep.SlaveVolume, sshPort, geoRep.ActionParams["option"])
 
 	// create session and then make volume read-only
 	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
@@ -77,11 +73,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 	godbc.Require(geoRep.SlaveHost != "")
 	godbc.Require(geoRep.SlaveVolume != "")
 
-	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
-
-	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
-		cmd = fmt.Sprintf("%s %s", cmd, force)
-	}
+	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s force", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
 
 	commands := []string{cmd}
 	apiAction := api.GeoReplicationActionType(action)
@@ -150,12 +142,12 @@ func (s *KubeExecutor) GeoReplicationVolumeStatus(host, volume string) (*executo
 		GeoRepStatus executors.GeoReplicationStatus `xml:"geoRep"`
 	}
 
-	cmd := fmt.Sprintf("sleep 70 && gluster --mode=script volume geo-replication %s status --xml", volume)
+	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s status --xml", volume)
 	commands := []string{cmd}
 
 	var output []string
 	var err error
-	if output, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 1); err != nil {
+	if output, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
 		return nil, err
 	}
 
