@@ -13,6 +13,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
@@ -27,6 +28,16 @@ func cmdChangelogsEnabled(volName string, enabled bool) string {
 	} else {
 		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog off", volName)
 	}
+}
+
+// This function appends "force" flag to command
+// If flag already present, function will return command as is
+func forceCmd(cmd string) string {
+	if !strings.Contains(cmd, " force") {
+		// if "force" flag is not already applied, then add it
+		return fmt.Sprintf("%s %s", cmd, "force")
+	}
+	return cmd
 }
 
 // GeoReplicationCreate creates a geo-rep session for the given volume
@@ -48,7 +59,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s create%s%s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, sshPort, geoRep.ActionParams["option"])
 
 	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
-		cmd = fmt.Sprintf("%s %s", cmd, "force")
+		cmd = forceCmd(cmd)
 	}
 
 	// create session and then make volume read-only
@@ -59,6 +70,8 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 				if i >= 50 {
 					return err
 				}
+				// create command failed, apply "force" flag for retries
+				command = forceCmd(command)
 				time.Sleep(3 * time.Second)
 			} else {
 				break
@@ -80,7 +93,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
 
 	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
-		cmd = fmt.Sprintf("%s %s", cmd, "force")
+		cmd = forceCmd(cmd)
 	}
 
 	commands := []string{cmd}
@@ -96,6 +109,11 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 2); err != nil {
 				if i >= 50 {
 					return err
+				}
+				// command failed, apply "force" flag for retries
+				// note: "delete" action and "volume set" command do not support "force"
+				if apiAction != api.GeoReplicationActionDelete && !strings.Contains(cmd, "volume set") {
+					command = forceCmd(command)
 				}
 				time.Sleep(3 * time.Second)
 			} else {
