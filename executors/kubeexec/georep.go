@@ -45,7 +45,11 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	if geoRep.SlaveSSHPort != 0 {
 		sshPort = fmt.Sprintf(" ssh-port %d ", geoRep.SlaveSSHPort)
 	}
-	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s create%s%s force", volume, geoRep.SlaveHost, geoRep.SlaveVolume, sshPort, geoRep.ActionParams["option"])
+	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s create%s%s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, sshPort, geoRep.ActionParams["option"])
+
+	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
+		cmd = fmt.Sprintf("%s %s", cmd, "force")
+	}
 
 	// create session and then make volume read-only
 	commands := []string{cmd, cmdChangelogsEnabled(volume, false)}
@@ -73,7 +77,11 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 	godbc.Require(geoRep.SlaveHost != "")
 	godbc.Require(geoRep.SlaveVolume != "")
 
-	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s force", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
+	cmd := fmt.Sprintf("gluster --mode=script volume geo-replication %s %s::%s %s", volume, geoRep.SlaveHost, geoRep.SlaveVolume, action)
+
+	if force, ok := geoRep.ActionParams["force"]; ok && force == "true" {
+		cmd = fmt.Sprintf("%s %s", cmd, "force")
+	}
 
 	commands := []string{cmd}
 	apiAction := api.GeoReplicationActionType(action)
