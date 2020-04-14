@@ -138,6 +138,10 @@ func NewVolumeEntryFromRequest(req *api.VolumeCreateRequest) *VolumeEntry {
 	// If it is zero, then no volume options are set.
 	vol.GlusterVolumeOptions = req.GlusterVolumeOptions
 
+    //Set many bricks per node volume parameters
+	vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, "cluster.brick-multiplex on")
+	vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, "transport.listen-backlog 100")
+
 	if vol.Info.Block {
 		if err := vol.SetRawCapacity(req.Size); err != nil {
 			logger.Err(err)

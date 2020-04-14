@@ -69,10 +69,6 @@ func (s *CmdExecutor) VolumeCreate(host string,
 
 	commands = append(commands, s.createVolumeOptionsCommand(volume)...)
 
-	//Set many bricks per node volume parameters
-    commands = append(commands, fmt.Sprintf("gluster --mode=script volume %v set cluster.brick-multiplex on", volume.Name))
-    commands = append(commands, fmt.Sprintf("gluster --mode=script volume %v set transport.listen-backlog 100", volume.Name))
-
 	commands = append(commands, fmt.Sprintf("gluster --mode=script volume start %v", volume.Name))
 
 	_, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10)
