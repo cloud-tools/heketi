@@ -14,6 +14,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -138,9 +139,15 @@ func NewVolumeEntryFromRequest(req *api.VolumeCreateRequest) *VolumeEntry {
 	// If it is zero, then no volume options are set.
 	vol.GlusterVolumeOptions = req.GlusterVolumeOptions
 
-    //Set many bricks per node volume parameters
+	//Set many bricks per node volume parameters
 	vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, "cluster.brick-multiplex on")
-	vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, "transport.listen-backlog 100")
+
+	transportListenBacklogOption, exists := os.LookupEnv("HEKETI_TRANSPORT_LISTEN_BACKLOG_OPTION")
+	if exists {
+		vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, fmt.Sprintf("transport.listen-backlog %v", transportListenBacklogOption))
+	} else {
+		vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, "transport.listen-backlog 100")
+	}
 
 	if vol.Info.Block {
 		if err := vol.SetRawCapacity(req.Size); err != nil {
