@@ -140,8 +140,6 @@ func NewVolumeEntryFromRequest(req *api.VolumeCreateRequest) *VolumeEntry {
 	vol.GlusterVolumeOptions = req.GlusterVolumeOptions
 
 	//Set many bricks per node volume parameters
-	vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, "cluster.brick-multiplex on")
-
 	transportListenBacklogOption, exists := os.LookupEnv("HEKETI_TRANSPORT_LISTEN_BACKLOG_OPTION")
 	if exists {
 		vol.GlusterVolumeOptions = append(vol.GlusterVolumeOptions, fmt.Sprintf("transport.listen-backlog %v", transportListenBacklogOption))
