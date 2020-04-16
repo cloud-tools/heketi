@@ -15,7 +15,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	restclient "k8s.io/client-go/rest"
@@ -213,8 +212,7 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 			Name(podName).
 			Namespace(k.namespace).
 			SubResource("exec").
-			Param("container", containerName).
-			Timeout(time.Minute * time.Duration(timeoutMinutes))
+			Param("container", containerName)
 		req.VersionedParams(&api.PodExecOptions{
 			Container: containerName,
 			Command:   []string{"/bin/bash", "-c", command},
