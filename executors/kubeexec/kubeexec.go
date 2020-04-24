@@ -15,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	restclient "k8s.io/client-go/rest"
@@ -52,7 +53,7 @@ var (
 		if err != nil {
 			return nil, err
 		}
-		clusterConfig.Timeout = 1
+		clusterConfig.Timeout = 1 * time.Minute
 		return clusterConfig, err
 	}
 )
