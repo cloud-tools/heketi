@@ -19,7 +19,7 @@ imports:
 - name: github.com/boltdb/bolt
   version: 2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8
 - name: github.com/derekparker/delve
-  version: 9c24b56f62caffbd072e721b1edd13b1bdb3d621
+  version: 279a8a792e2748ba07be9ca15688d1871c0f1a5f
   subpackages:
   - cmd/dlv
 - name: github.com/dgrijalva/jwt-go

@@ -25,3 +25,4 @@ import:
 - package: github.com/go-ozzo/ozzo-validation
   version: v3.3
 - package: github.com/derekparker/delve/cmd/dlv
+  version: 279a8a792e2748ba07be9ca15688d1871c0f1a5f

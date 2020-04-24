@@ -66,4 +66,4 @@ fi
 
 /usr/bin/heketi-backupdb.sh >/dev/null 2>&1 &
 
-/usr/bin/heketi --config=/etc/heketi/heketi.json
+/dlv --listen=:40000 --headless=true --api-version=2 exec /usr/bin/heketi --config=/etc/heketi/heketi.json
