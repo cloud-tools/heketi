@@ -66,7 +66,7 @@ package:
 	@echo $(PACKAGE)
 
 heketi: vendor glide.lock
-	$(GO) build $(GOBUILDFLAGS) $(LDFLAGS) -o $(APP_NAME)
+	$(GO) build -gcflags "all=-N -l" $(GOBUILDFLAGS) $(LDFLAGS) -o $(APP_NAME)
 
 server: heketi
 
