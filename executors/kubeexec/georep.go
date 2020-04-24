@@ -150,7 +150,7 @@ func (s *KubeExecutor) GeoReplicationVolumeStatus(host, volume string) (*executo
 		GeoRepStatus executors.GeoReplicationStatus `xml:"geoRep"`
 	}
 
-	cmd := fmt.Sprintf("sleep 61 && gluster --mode=script volume geo-replication %s status --xml", volume)
+	cmd := fmt.Sprintf("sleep 120 && gluster --mode=script volume geo-replication %s status --xml", volume)
 	commands := []string{cmd}
 
 	var output []string
