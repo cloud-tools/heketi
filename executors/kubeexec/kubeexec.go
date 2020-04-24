@@ -48,7 +48,12 @@ type KubeExecutor struct {
 var (
 	logger          = utils.NewLogger("[kubeexec]", utils.LEVEL_DEBUG)
 	inClusterConfig = func() (*restclient.Config, error) {
-		return restclient.InClusterConfig()
+		clusterConfig, err := restclient.InClusterConfig()
+		if err != nil {
+			return nil, err
+		}
+		clusterConfig.Timeout = 1
+		return clusterConfig, err
 	}
 )
 
