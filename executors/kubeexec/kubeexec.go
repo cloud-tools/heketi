@@ -237,7 +237,7 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 
 		// Prepare communication channels, set 3 minutes timeout
 		doneC := make(chan struct{})
-		errC := make(chan error)
+		errC := make(chan error, 1)
 		timeoutC := time.NewTimer(3 * time.Minute).C
 
 		// Run exec in separate goroutine, notify on completion through done or err channels
@@ -249,7 +249,8 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 			})
 
 			if err != nil {
-				errC <- err
+				errC <- logger.LogError("failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
+					command, podName, err, b.String(), berr.String())
 			} else {
 				close(doneC)
 			}
@@ -261,9 +262,7 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 			logger.Debug("Host: %v Pod: %v Command: %v\nResult: %v", host, podName, command, b.String())
 			buffers[index] = b.String()
 		case err := <-errC:
-			_ = logger.LogError("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
-				command, podName, err, b.String(), berr.String())
-			return nil, fmt.Errorf("%v", berr.String())
+			return nil, err
 		case <-timeoutC:
 			// in case of timeout we just give-up on goroutine, goroutine will hang forever until heketi restart
 			err = fmt.Errorf("timeout happened for command [%v] on %v", command, podName)
