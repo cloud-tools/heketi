@@ -232,9 +232,6 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 		var b bytes.Buffer
 		var berr bytes.Buffer
 
-		// Excute command
-		logger.Debug("Executing command '%v' on host %v", commands, host)
-
 		// Prepare communication channels, set 3 minutes timeout
 		doneC := make(chan struct{})
 		errC := make(chan error, 1)
@@ -242,6 +239,7 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 
 		// Run exec in separate goroutine, notify on completion through done or err channels
 		go func() {
+			logger.Debug("Executing command '%v' on host %v", commands, host)
 			err = exec.Stream(remotecommand.StreamOptions{
 				SupportedProtocols: kubeletcmd.SupportedStreamingProtocols,
 				Stdout:             &b,
