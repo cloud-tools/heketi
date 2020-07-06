@@ -11,6 +11,7 @@ package kubeexec
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/lpabon/godbc"
 )
@@ -35,9 +36,14 @@ func (s *KubeExecutor) SshdControl(host string, action string) error {
 	cmd := fmt.Sprintf("systemctl %v sshd && systemctl %v sshd ", action, subaction)
 
 	commands := []string{cmd}
-	if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-		return err
+	for i := 0; ; i++ {
+		if _, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
+			if i >= 50 {
+				return err
+			}
+			time.Sleep(3 * time.Second)
+		} else {
+			return nil
+		}
 	}
-
-	return nil
 }
