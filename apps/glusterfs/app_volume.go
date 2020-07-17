@@ -560,7 +560,7 @@ func (a *App) VolumeExpand(w http.ResponseWriter, r *http.Request) {
 
 	var msg api.VolumeExpandRequest
 	err := utils.GetJsonFromRequest(r, &msg)
-	if err != nonil {
+	if err != nil {
 		http.Error(w, "request unable to be parsed", 422)
 		return
 	}
