@@ -748,7 +748,7 @@ func asyncVolumeDelete(w http.ResponseWriter,
 	return AsyncHttpRedirectFunc(app, w, r, func() (string, error) {
 		logger.Info("Starting deleting volume %v", targetVolume.Info.Name)
 
-		stopMasterSessionReq := api.GeoReplicationRequest{
+		/*stopMasterSessionReq := api.GeoReplicationRequest{
 			Action: api.GeoReplicationActionStop,
 			GeoReplicationInfo: api.GeoReplicationInfo{
 				SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
@@ -759,7 +759,7 @@ func asyncVolumeDelete(w http.ResponseWriter,
 			err = logger.LogError("Error stopping session for volume %v: %v", targetVolume.Info.Name, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return "", err
-		}
+		}*/
 
 		delMasterSessionReq := api.GeoReplicationRequest{
 			Action: api.GeoReplicationActionDelete,
