@@ -738,7 +738,7 @@ func (a *App) VolumeSnapshot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// returns func which stops and deletes session from target volume to remote volume, then removes target volume
+// returns func which stops (optionally) and deletes session from target volume to remote volume, then removes target volume
 func asyncVolumeDelete(w http.ResponseWriter,
 	r *http.Request,
 	app *App,
@@ -748,34 +748,43 @@ func asyncVolumeDelete(w http.ResponseWriter,
 	return AsyncHttpRedirectFunc(app, w, r, func() (string, error) {
 		logger.Info("Starting deleting volume %v", targetVolume.Info.Name)
 
-		/*stopMasterSessionReq := api.GeoReplicationRequest{
-			Action: api.GeoReplicationActionStop,
-			GeoReplicationInfo: api.GeoReplicationInfo{
-				SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
-				SlaveVolume: remoteVolume.Info.Name,
-			},
-		}
-		if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), stopMasterSessionReq); err != nil {
-			err = logger.LogError("Error stopping session for volume %v: %v", targetVolume.Info.Name, err)
+		status, err := targetVolume.GeoReplicationStatus(app.executor, targetNode.ManageHostName())
+		if err != nil {
+			err = logger.LogError("Cat get geo-replication status %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return "", err
-		}*/
+		}
 
-		delMasterSessionReq := api.GeoReplicationRequest{
+		if status != "Stopped" {
+			stopSessionReq := api.GeoReplicationRequest{
+				Action: api.GeoReplicationActionStop,
+				GeoReplicationInfo: api.GeoReplicationInfo{
+					SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
+					SlaveVolume: remoteVolume.Info.Name,
+				},
+			}
+			if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), stopSessionReq); err != nil {
+				err = logger.LogError("Error stopping session for volume %v: %v", targetVolume.Info.Name, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return "", err
+			}
+		}
+
+		deleteSessionReq := api.GeoReplicationRequest{
 			Action: api.GeoReplicationActionDelete,
 			GeoReplicationInfo: api.GeoReplicationInfo{
 				SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
 				SlaveVolume: remoteVolume.Info.Name,
 			},
 		}
-		if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), delMasterSessionReq); err != nil {
+		if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), deleteSessionReq); err != nil {
 			err = logger.LogError("Error deleting session for volume %v: %v", targetVolume.Info.Name, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return "", err
 		}
 
-		delMasterVolume := NewVolumeDeleteOperation(targetVolume, app.db)
-		if err := AsyncHttpOperation(app, w, r, delMasterVolume); err != nil {
+		deleteVolume := NewVolumeDeleteOperation(targetVolume, app.db)
+		if err := AsyncHttpOperation(app, w, r, deleteVolume); err != nil {
 			err = logger.LogError("Failed to delete volume %v: %v", targetVolume.Info.Name, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return "", err
