@@ -755,7 +755,7 @@ func asyncVolumeDelete(w http.ResponseWriter,
 			return "", err
 		}
 
-		if status != "Stopped" {
+		if status == "Active" || status == "Passive" || status == "Faulty" {
 			stopSessionReq := api.GeoReplicationRequest{
 				Action: api.GeoReplicationActionStop,
 				GeoReplicationInfo: api.GeoReplicationInfo{
