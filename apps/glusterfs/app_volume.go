@@ -746,7 +746,7 @@ func asyncVolumeDelete(w http.ResponseWriter,
 
 		status, err := targetVolume.GeoReplicationStatus(app.executor, targetNode.ManageHostName())
 		if err != nil {
-			err = logger.LogError("Cat get geo-replication status %v", err)
+			err = logger.LogError("Cannot get geo-replication status %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return "", err
 		}
