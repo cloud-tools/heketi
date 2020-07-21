@@ -493,11 +493,7 @@ func (a *App) VolumeDelete(w http.ResponseWriter, r *http.Request) {
 		}
 
 		slaveVolume, err = NewVolumeEntryFromId(tx, masterVolume.Info.Remvolid)
-		if err == ErrNotFound {
-			err = logger.LogError("Slave volume with id %v not found \n", masterVolume.Info.Remvolid)
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return err
-		} else if err != nil {
+		if err != nil {
 			err = logger.LogError("Error finding slave volume with id %v: %s", masterVolume.Info.Remvolid, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
@@ -738,7 +734,7 @@ func (a *App) VolumeSnapshot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// returns func which stops (optionally) and deletes session from target volume to remote volume, then removes target volume
+// starts asynchronous volume deletion, which includes session deletion also (session is optionally stopped)
 func asyncVolumeDelete(w http.ResponseWriter,
 	r *http.Request,
 	app *App,
