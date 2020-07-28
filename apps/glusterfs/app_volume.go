@@ -466,54 +466,67 @@ func (a *App) VolumeInfo(w http.ResponseWriter, r *http.Request) {
 func (a *App) VolumeDelete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
+	logger.Info("Request to delete volume with id %v", id)
 
-	var remotevolumeid string
-	MasterCluster := []string{}
-	MasterCluster, _ = a.MasterSlaveClustersCheck()
+	masterClustersList, slaveClustersList := a.MasterSlaveClustersCheck()
+	if len(masterClustersList) == 0 || len(slaveClustersList) == 0 {
+		err := logger.LogError("Either master or slave cluster not found")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	var volume *VolumeEntry
+	var masterVolume *VolumeEntry
+	var masterNode *NodeEntry
+	var slaveVolume *VolumeEntry
+	var slaveNode *NodeEntry
 	err := a.db.View(func(tx *bolt.Tx) error {
-
 		var err error
-		volume, err = NewVolumeEntryFromId(tx, id)
-
-		if len(MasterCluster) != 0 {
-			remotevolumeid = volume.Info.Remvolid
-			logger.Debug("Remote Volume with id %v found \n", remotevolumeid)
-		}
-
+		masterVolume, err = NewVolumeEntryFromId(tx, id)
 		if err == ErrNotFound {
+			err = logger.LogError("Master volume with id %v not found \n", id)
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return err
 		} else if err != nil {
+			err = logger.LogError("Error finding master volume with id %v: %s", id, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
 
-		if volume.Info.Name == db.HeketiStorageVolumeName {
-			err := fmt.Errorf("Cannot delete volume containing the Heketi database")
-			http.Error(w, err.Error(), http.StatusConflict)
+		slaveVolume, err = NewVolumeEntryFromId(tx, masterVolume.Info.Remvolid)
+		if err != nil {
+			err = logger.LogError("Error finding slave volume with id %v: %s", masterVolume.Info.Remvolid, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return err
 		}
 
-		if !volume.Info.Block {
-			// further checks only needed for block-hosting volumes
-			return nil
+		masterCluster, err := NewClusterEntryFromId(tx, masterClustersList[0])
+		if err != nil {
+			err = logger.LogError("Error finding master cluster with id %v: %s", masterClustersList[0], err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+		slaveCluster, err := NewClusterEntryFromId(tx, slaveClustersList[0])
+		if err != nil {
+			err = logger.LogError("Error finding slave cluster with id %v: %s", slaveClustersList[0], err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
 		}
 
-		for _, bvId := range volume.Info.BlockInfo.BlockVolumes {
-			_, err = NewBlockVolumeEntryFromId(tx, bvId)
-			if err == nil {
-				err = logger.LogError("Cannot delete a block hosting volume containing block volumes")
-				http.Error(w, err.Error(), http.StatusConflict)
-				return err
-			}
-			if err != ErrNotFound {
-				err = logger.LogError("Refusing to delete block-hosting volume: "+
-					"Error loading block-volume [%v]: %v", bvId, err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return err
-			}
+		if masterNode, err = NewNodeEntryFromId(tx, masterCluster.Info.Nodes[0]); err != nil {
+			err = logger.LogError("Error finding master node with id %v: %s", masterCluster.Info.Nodes[0], err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+		if slaveNode, err = NewNodeEntryFromId(tx, slaveCluster.Info.Nodes[0]); err != nil {
+			err = logger.LogError("Error finding slave node with id %v: %s", slaveCluster.Info.Nodes[0], err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+
+		if masterVolume.Info.Name == db.HeketiStorageVolumeName {
+			err := fmt.Errorf("Cannot delete volume containing the Heketi database")
+			http.Error(w, err.Error(), http.StatusConflict)
+			return err
 		}
 
 		return nil
@@ -522,64 +535,16 @@ func (a *App) VolumeDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vdel := NewVolumeDeleteOperation(volume, a.db)
-	if err := AsyncHttpOperation(a, w, r, vdel); err != nil {
-		OperationHttpErrorf(w, err, "Failed to set up volume delete: %v", err)
+	if err := asyncVolumeDelete(w, r, a, masterVolume, slaveVolume, masterNode); err != nil {
+		err = logger.LogError("Failed to asynchronously delete master volume %v: %v", masterVolume.Info.Name, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if remotevolumeid != "" {
-		logger.Debug("For remote Volume id %v \n", remotevolumeid)
-		var volume *VolumeEntry
-		err := a.db.View(func(tx *bolt.Tx) error {
-			var err error
-			volume, err = NewVolumeEntryFromId(tx, remotevolumeid)
-			if err == ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-				return err
-			} else if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return err
-			}
-
-			if volume.Info.Name == db.HeketiStorageVolumeName {
-				err := fmt.Errorf("Cannot delete volume containing the Heketi database")
-				http.Error(w, err.Error(), http.StatusConflict)
-				return err
-			}
-
-			if !volume.Info.Block {
-				// further checks only needed for block-hosting volumes
-				return nil
-			}
-
-			for _, bvId := range volume.Info.BlockInfo.BlockVolumes {
-				_, err = NewBlockVolumeEntryFromId(tx, bvId)
-				if err == nil {
-					err = logger.LogError("Cannot delete a block hosting volume containing block volumes")
-					http.Error(w, err.Error(), http.StatusConflict)
-					return err
-				}
-				if err != ErrNotFound {
-					err = logger.LogError("Refusing to delete block-hosting volume: "+
-						"Error loading block-volume [%v]: %v", bvId, err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return err
-				}
-			}
-
-			return nil
-		})
-		if err != nil {
-			return
-		}
-		vdel := NewVolumeDeleteOperation(volume, a.db)
-		if err := AsyncHttpOperation(a, w, r, vdel); err != nil {
-			http.Error(w,
-				fmt.Sprintf("Failed to set up volume delete: %v", err),
-				http.StatusInternalServerError)
-			return
-		}
+	if err := asyncVolumeDelete(w, r, a, slaveVolume, masterVolume, slaveNode); err != nil {
+		err = logger.LogError("Failed to asynchronously delete slave volume %v: %v", slaveVolume.Info.Name, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -767,4 +732,60 @@ func (a *App) VolumeSnapshot(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError)
 		return
 	}
+}
+
+// starts asynchronous volume deletion, which includes session deletion also (session is optionally stopped)
+func asyncVolumeDelete(w http.ResponseWriter,
+	r *http.Request,
+	app *App,
+	targetVolume *VolumeEntry,
+	remoteVolume *VolumeEntry,
+	targetNode *NodeEntry) error {
+	return AsyncHttpRedirectFunc(app, w, r, func() (string, error) {
+		logger.Info("Starting deleting volume %v", targetVolume.Info.Name)
+
+		status, err := targetVolume.GeoReplicationStatus(app.executor, targetNode.ManageHostName())
+		if err != nil {
+			err = logger.LogError("Cannot get geo-replication status %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return "", err
+		}
+
+		if status == "Active" || status == "Passive" || status == "Faulty" {
+			stopSessionReq := api.GeoReplicationRequest{
+				Action: api.GeoReplicationActionStop,
+				GeoReplicationInfo: api.GeoReplicationInfo{
+					SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
+					SlaveVolume: remoteVolume.Info.Name,
+				},
+			}
+			if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), stopSessionReq); err != nil {
+				err = logger.LogError("Error stopping session for volume %v: %v", targetVolume.Info.Name, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return "", err
+			}
+		}
+
+		deleteSessionReq := api.GeoReplicationRequest{
+			Action: api.GeoReplicationActionDelete,
+			GeoReplicationInfo: api.GeoReplicationInfo{
+				SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
+				SlaveVolume: remoteVolume.Info.Name,
+			},
+		}
+		if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), deleteSessionReq); err != nil {
+			err = logger.LogError("Error deleting session for volume %v: %v", targetVolume.Info.Name, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return "", err
+		}
+
+		deleteVolume := NewVolumeDeleteOperation(targetVolume, app.db)
+		if err := AsyncHttpOperation(app, w, r, deleteVolume); err != nil {
+			err = logger.LogError("Failed to delete volume %v: %v", targetVolume.Info.Name, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return "", err
+		}
+
+		return "/volumes", nil
+	})
 }
