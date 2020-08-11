@@ -255,7 +255,8 @@ imports:
   - util/flowcontrol
   - util/integer
 - name: k8s.io/kubernetes
-  version: d6f433224538d4f9ca2f7ae19b252e6fcb66a3ae
+  repo: https://github.com/kubernetes/kubernetes.git
+  version: v1.6.4
   subpackages:
   - pkg/api
   - pkg/api/install
