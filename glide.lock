@@ -235,6 +235,7 @@ imports:
   - pkg/server/httplog
   - pkg/util/wsstream
 - name: k8s.io/client-go
+  version: 3627aeb7d4f6ade38f995d2c923e459146493c7e
   subpackages:
   - discovery
   - discovery/fake
@@ -255,6 +256,7 @@ imports:
   - util/flowcontrol
   - util/integer
 - name: k8s.io/kubernetes
+  version: d6f433224538d4f9ca2f7ae19b252e6fcb66a3ae
   subpackages:
   - pkg/api
   - pkg/api/install
