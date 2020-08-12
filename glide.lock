@@ -179,7 +179,9 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/apimachinery
-  version: 75b8dd260ef0469d96d578705a87cffd0e09dab8
+  repo: https://github.com/cloud-tools/apimachinery.git
+  vcs: git
+  version: a7e31c072f88f66e955ceeb6487d72b8bd01fdc5
   subpackages:
   - pkg/api/equality
   - pkg/api/errors
@@ -233,8 +235,6 @@ imports:
   - pkg/server/httplog
   - pkg/util/wsstream
 - name: k8s.io/client-go
-  repo: https://github.com/kubernetes/client-go.git
-  version: release-3.0
   subpackages:
   - discovery
   - discovery/fake
@@ -255,8 +255,6 @@ imports:
   - util/flowcontrol
   - util/integer
 - name: k8s.io/kubernetes
-  repo: https://github.com/kubernetes/kubernetes.git
-  version: v1.6.4
   subpackages:
   - pkg/api
   - pkg/api/install
