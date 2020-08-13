@@ -12,6 +12,7 @@ package kubeexec
 import (
 	"bytes"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"strconv"
 	"strings"
@@ -242,7 +243,11 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 			logger.LogError("Failed to run command [%v] on %v: Err[%v]: Stdout [%v]: Stderr [%v]",
 				command, podName, err, b.String(), berr.String())
 			return nil, fmt.Errorf("%v", berr.String())
+		} else if b.String() == "" {
+			logger.LogError("Command [%v] on %v returned no result, failing...", command, podName)
+			return nil, errors.New("Command returned empty result")
 		}
+
 		logger.Debug("Host: %v Pod: %v Command: %v\nResult: %v", host, podName, command, b.String())
 		buffers[index] = b.String()
 
