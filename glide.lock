@@ -181,7 +181,7 @@ imports:
 - name: k8s.io/apimachinery
   repo: https://github.com/cloud-tools/apimachinery.git
   vcs: git
-  version: d11553236093d1aa3fb85515c2284e63559c31fa
+  version: b8c4075551e487bd7afff5c51d574eebbe7c1f8b
   subpackages:
   - pkg/api/equality
   - pkg/api/errors
