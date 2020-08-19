@@ -2,8 +2,9 @@ hash: 5fc263bfacc703e0a599166ccae968891dd53d7b4e42a3d8356b3194e45833bb
 updated: 2017-12-18T16:46:06.7851579+05:30
 imports:
 - name: bitbucket.org/ww/goautoneg
-  version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
-  vcs: hg
+  repo: https://github.com/adjust/goautoneg
+  version: d788f35a0315672bc90f50a6145d1252a230ee0d
+  vcs: git
 - name: github.com/asaskevich/govalidator
   version: 593d64559f7600f29581a3ee42177f5dbded27a9
 - name: github.com/auth0/go-jwt-middleware
