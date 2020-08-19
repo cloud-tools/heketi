@@ -44,7 +44,9 @@ imports:
 - name: github.com/docker/go-units
   version: e30f1e79f3cd72542f2026ceec18d3bd67ab859c
 - name: github.com/docker/spdystream
-  version: 449fdfce4d962303d702fec724ef0ad181c92528
+  repo: https://github.com/cloud-tools/spdystream.git
+  vcs: git
+  version: abab063e8763d9381f5339420b30187123b2474f
   subpackages:
   - spdy
 - name: github.com/emicklei/go-restful
