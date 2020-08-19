@@ -11,7 +11,6 @@ package kubeexec
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
