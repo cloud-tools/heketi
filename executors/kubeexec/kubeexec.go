@@ -243,7 +243,6 @@ func (k *KubeExecutor) ConnectAndExec(host, resource string,
 				command, podName, err, b.String(), berr.String())
 			return nil, fmt.Errorf("%v", berr.String())
 		}
-
 		logger.Debug("Host: %v Pod: %v Command: %v\nResult: %v", host, podName, command, b.String())
 		buffers[index] = b.String()
 
