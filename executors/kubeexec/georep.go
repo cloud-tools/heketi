@@ -155,16 +155,8 @@ func (s *KubeExecutor) GeoReplicationVolumeStatus(host, volume string) (*executo
 
 	var output []string
 	var err error
-
-	for i := 0; ; i++ {
-		if output, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
-			if i >= 50 {
-				return nil, err
-			}
-			time.Sleep(3 * time.Second)
-		} else {
-			break
-		}
+	if output, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 10); err != nil {
+		return nil, err
 	}
 
 	var geoRepStatus CliOutput
