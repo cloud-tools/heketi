@@ -13,6 +13,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
@@ -26,6 +27,26 @@ func cmdChangelogsEnabled(volName string, enabled bool) string {
 		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog on", volName)
 	} else {
 		return fmt.Sprintf("gluster --mode=script volume set %s changelog.changelog off", volName)
+	}
+}
+
+// function is used to determine if error message for some action implies that action is already executed
+func errAlreadyInTargetState(err error, action api.GeoReplicationActionType) bool {
+	errMsg := strings.ToLower(err.Error())
+	if action == api.GeoReplicationActionCreate && strings.Contains(errMsg, "is already created") {
+		return true
+	} else if action == api.GeoReplicationActionStart && strings.Contains(errMsg, "already started") {
+		return true
+	} else if action == api.GeoReplicationActionStop && strings.Contains(errMsg, "not running on this node") {
+		return true
+	} else if action == api.GeoReplicationActionPause && strings.Contains(errMsg, "already paused") {
+		return true
+	} else if action == api.GeoReplicationActionResume && strings.Contains(errMsg, "is not paused") {
+		return true
+	} else if action == api.GeoReplicationActionDelete && strings.Contains(errMsg, "does not exist") {
+		return true
+	} else {
+		return false
 	}
 }
 
@@ -56,7 +77,9 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 	for _, command := range commands {
 		for i := 0; ; i++ {
 			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 10); err != nil {
-				if i >= 50 {
+				if errAlreadyInTargetState(err, api.GeoReplicationActionCreate) {
+					return nil
+				} else if i >= 50 {
 					return err
 				}
 				time.Sleep(3 * time.Second)
@@ -94,7 +117,9 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 	for _, command := range commands {
 		for i := 0; ; i++ {
 			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 10); err != nil {
-				if i >= 50 {
+				if errAlreadyInTargetState(err, api.GeoReplicationActionType(action)) {
+					return nil
+				} else if i >= 50 {
 					return err
 				}
 				time.Sleep(3 * time.Second)
