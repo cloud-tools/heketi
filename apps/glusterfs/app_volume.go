@@ -777,6 +777,6 @@ func asyncVolumeDelete(w http.ResponseWriter,
 			return "", err
 		}
 
-		return "/volumes", nil
+		return "", nil
 	})
 }
