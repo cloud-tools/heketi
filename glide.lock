@@ -47,7 +47,7 @@ imports:
 - name: github.com/docker/spdystream
   repo: https://github.com/cloud-tools/spdystream.git
   vcs: git
-  version: 5fbe98019aa94060b62666b5447e1500b75d1fe4
+  version: 302290ca9684e064fb605f9009288f27160d800a
   subpackages:
   - spdy
 - name: github.com/emicklei/go-restful
@@ -184,7 +184,7 @@ imports:
 - name: k8s.io/apimachinery
   repo: https://github.com/cloud-tools/apimachinery.git
   vcs: git
-  version: 66a93eceb1ee7c96cb6c305ea03080ff9bbdd8b9
+  version: 7c3738aa630469a33758ecc21678475338dd4054
   subpackages:
   - pkg/api/equality
   - pkg/api/errors
