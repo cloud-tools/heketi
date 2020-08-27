@@ -23,6 +23,7 @@ func (s *KubeExecutor) SshdControl(host string, action string) error {
 	godbc.Require(host != "")
 	godbc.Require(action != "")
 
+	// all operations are idempotent
 	switch {
 	case action == "start":
 		subaction = "enable"

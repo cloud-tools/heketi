@@ -512,13 +512,28 @@ type GeoReplicationActionType string
 
 // Supported GeoReplication action types
 const (
+	// non-idempotent, error: "is already created"
 	GeoReplicationActionCreate GeoReplicationActionType = "create"
+
+	// idempotent
 	GeoReplicationActionConfig GeoReplicationActionType = "config"
-	GeoReplicationActionStart  GeoReplicationActionType = "start"
-	GeoReplicationActionStop   GeoReplicationActionType = "stop"
+
+	// non-idempotent, error: "already started"
+	GeoReplicationActionStart GeoReplicationActionType = "start"
+
+	// non-idempotent, error: "not running on this node"
+	GeoReplicationActionStop GeoReplicationActionType = "stop"
+
+	// idempotent
 	GeoReplicationActionStatus GeoReplicationActionType = "status"
-	GeoReplicationActionPause  GeoReplicationActionType = "pause"
+
+	// non-idempotent, error: "already Paused"
+	GeoReplicationActionPause GeoReplicationActionType = "pause"
+
+	// non-idempotent, error: "is not Paused"
 	GeoReplicationActionResume GeoReplicationActionType = "resume"
+
+	// non-idempotent, error: "does not exist"
 	GeoReplicationActionDelete GeoReplicationActionType = "delete"
 )
 

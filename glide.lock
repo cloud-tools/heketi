@@ -2,8 +2,9 @@ hash: 5fc263bfacc703e0a599166ccae968891dd53d7b4e42a3d8356b3194e45833bb
 updated: 2017-12-18T16:46:06.7851579+05:30
 imports:
 - name: bitbucket.org/ww/goautoneg
-  version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
-  vcs: hg
+  repo: https://github.com/adjust/goautoneg
+  version: d788f35a0315672bc90f50a6145d1252a230ee0d
+  vcs: git
 - name: github.com/asaskevich/govalidator
   version: 593d64559f7600f29581a3ee42177f5dbded27a9
 - name: github.com/auth0/go-jwt-middleware
@@ -44,7 +45,9 @@ imports:
 - name: github.com/docker/go-units
   version: e30f1e79f3cd72542f2026ceec18d3bd67ab859c
 - name: github.com/docker/spdystream
-  version: 449fdfce4d962303d702fec724ef0ad181c92528
+  repo: https://github.com/cloud-tools/spdystream.git
+  vcs: git
+  version: 302290ca9684e064fb605f9009288f27160d800a
   subpackages:
   - spdy
 - name: github.com/emicklei/go-restful
@@ -179,7 +182,9 @@ imports:
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
 - name: k8s.io/apimachinery
-  version: 75b8dd260ef0469d96d578705a87cffd0e09dab8
+  repo: https://github.com/cloud-tools/apimachinery.git
+  vcs: git
+  version: 7c3738aa630469a33758ecc21678475338dd4054
   subpackages:
   - pkg/api/equality
   - pkg/api/errors

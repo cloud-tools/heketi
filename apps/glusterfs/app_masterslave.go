@@ -145,21 +145,6 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 							return nil
 						})
 
-						status, err := volumeEntry.GeoReplicationStatus(a.executor, host)
-
-						if err != nil {
-							logger.LogError("Cat get geo-replication status %v", err)
-							return "", err
-						}
-
-						logger.Debug("Volume has %s status", status)
-
-						if status == "Stopped" {
-							logger.Info("Skip stopping the %v volume because it is already stopped", volumeEntry)
-
-							return "/volumes/" + volumeEntry.Info.Id + "/georeplication", nil
-						}
-
 						geoRepStartRequest := api.GeoReplicationRequest{
 							Action: api.GeoReplicationActionStop,
 							GeoReplicationInfo: api.GeoReplicationInfo{
@@ -234,21 +219,6 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 							return nil
 						})
 
-						status, err := volumeEntry.GeoReplicationStatus(a.executor, host)
-
-						if err != nil {
-							logger.LogError("Cat get geo-replication status %v", err)
-							return "", err
-						}
-
-						logger.Debug("Volume has %s status", status)
-
-						if status == "Active" {
-							logger.Info("Skip starting the %v volume because it is already started", volumeEntry)
-
-							return "/volumes/" + volumeEntry.Info.Id + "/georeplication", nil
-						}
-
 						geoRepStartRequest := api.GeoReplicationRequest{
 							Action: api.GeoReplicationActionStart,
 							GeoReplicationInfo: api.GeoReplicationInfo{
@@ -316,21 +286,6 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 
 							return nil
 						})
-
-						status, err := volumeEntry.GeoReplicationStatus(a.executor, host)
-
-						if err != nil {
-							logger.LogError("Cat get geo-replication status %v", err)
-							return "", err
-						}
-
-						logger.Debug("Volume has %s status", status)
-
-						if status == "Stopped" {
-							logger.Info("Skip stopping the %v volume because it is already started", volumeEntry)
-
-							return "/volumes/" + volumeEntry.Info.Id + "/georeplication", nil
-						}
 
 						geoRepStartRequest := api.GeoReplicationRequest{
 							Action: api.GeoReplicationActionStop,
@@ -406,21 +361,6 @@ func (a *App) MasterSlaveClusterPostHandler(w http.ResponseWriter, r *http.Reque
 
 							return nil
 						})
-
-						status, err := volumeEntry.GeoReplicationStatus(a.executor, host)
-
-						if err != nil {
-							logger.LogError("Cat get geo-replication status %v", err)
-							return "", err
-						}
-
-						logger.Debug("Volume has %s status", status)
-
-						if status == "Active" {
-							logger.Info("Skip starting the %v volume because it is already started", volumeEntry)
-
-							return "/volumes/" + volumeEntry.Info.Id + "/georeplication", nil
-						}
 
 						geoRepStartRequest := api.GeoReplicationRequest{
 							Action: api.GeoReplicationActionStart,

@@ -744,26 +744,17 @@ func asyncVolumeDelete(w http.ResponseWriter,
 	return AsyncHttpRedirectFunc(app, w, r, func() (string, error) {
 		logger.Info("Starting deleting volume %v", targetVolume.Info.Name)
 
-		status, err := targetVolume.GeoReplicationStatus(app.executor, targetNode.ManageHostName())
-		if err != nil {
-			err = logger.LogError("Cannot get geo-replication status %v", err)
+		stopSessionReq := api.GeoReplicationRequest{
+			Action: api.GeoReplicationActionStop,
+			GeoReplicationInfo: api.GeoReplicationInfo{
+				SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
+				SlaveVolume: remoteVolume.Info.Name,
+			},
+		}
+		if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), stopSessionReq); err != nil {
+			err = logger.LogError("Error stopping session for volume %v: %v", targetVolume.Info.Name, err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return "", err
-		}
-
-		if status == "Active" || status == "Passive" || status == "Faulty" {
-			stopSessionReq := api.GeoReplicationRequest{
-				Action: api.GeoReplicationActionStop,
-				GeoReplicationInfo: api.GeoReplicationInfo{
-					SlaveHost:   remoteVolume.Info.Mount.GlusterFS.Hosts[0],
-					SlaveVolume: remoteVolume.Info.Name,
-				},
-			}
-			if err := targetVolume.GeoReplicationAction(app.db, app.executor, targetNode.ManageHostName(), stopSessionReq); err != nil {
-				err = logger.LogError("Error stopping session for volume %v: %v", targetVolume.Info.Name, err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return "", err
-			}
 		}
 
 		deleteSessionReq := api.GeoReplicationRequest{
@@ -786,6 +777,6 @@ func asyncVolumeDelete(w http.ResponseWriter,
 			return "", err
 		}
 
-		return "/volumes", nil
+		return "", nil
 	})
 }
