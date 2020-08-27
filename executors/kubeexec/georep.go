@@ -79,7 +79,7 @@ func (s *KubeExecutor) GeoReplicationCreate(host, volume string, geoRep *executo
 			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 10); err != nil {
 				if errAlreadyInTargetState(err, api.GeoReplicationActionCreate) {
 					logger.Debug("Action %s already performed for volume %s", api.GeoReplicationActionCreate, volume)
-					return nil
+					break
 				} else if i >= 50 {
 					return err
 				}
@@ -120,7 +120,7 @@ func (s *KubeExecutor) GeoReplicationAction(host, volume, action string, geoRep 
 			if _, err := s.RemoteExecutor.RemoteCommandExecute(host, []string{command}, 10); err != nil {
 				if errAlreadyInTargetState(err, api.GeoReplicationActionType(action)) {
 					logger.Debug("Action %s already performed for volume %s", action, volume)
-					return nil
+					break
 				} else if i >= 50 {
 					return err
 				}
