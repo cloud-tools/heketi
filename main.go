@@ -30,6 +30,7 @@ import (
 	"github.com/cloud-tools/heketi/pkg/metrics"
 	"github.com/cloud-tools/heketi/server/admin"
 	"github.com/cloud-tools/heketi/server/config"
+	"github.com/heketi/heketi/server/profiling"
 )
 
 var (
