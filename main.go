@@ -30,6 +30,7 @@ import (
 	"github.com/cloud-tools/heketi/pkg/metrics"
 	"github.com/cloud-tools/heketi/server/admin"
 	"github.com/cloud-tools/heketi/server/config"
+	"github.com/heketi/heketi/server/profiling"
 )
 
 var (
@@ -265,6 +266,10 @@ func setWithEnvVariables(options *config.Config) {
 	if "" != env {
 		options.BackupDbToKubeSecret = true
 	}
+	env = os.Getenv("HEKETI_PROFILING")
+	if "" != env {
+		options.Profiling = true
+	}
 }
 
 func setupApp(config *config.Config) (a *glusterfs.App) {
@@ -350,6 +355,11 @@ func main() {
 
 	router.Methods("GET").Path("/metrics").Name("Metrics").HandlerFunc(metrics.NewMetricsHandler(app))
 
+	// Enable profiling on "/debug/pprof"
+	if options.Profiling {
+		profiling.EnableProfiling(router)
+	}
+	
 	// Create a router and do not allow any routes
 	// unless defined.
 	heketiRouter := mux.NewRouter().StrictSlash(true)
