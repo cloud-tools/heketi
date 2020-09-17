@@ -19,7 +19,7 @@ import (
 
 	"github.com/cloud-tools/heketi/middleware"
 	"github.com/cloud-tools/heketi/pkg/kubernetes"
-	"github.com/cloud-tools/heketi/pkg/utils"
+	
 )
 
 var (
