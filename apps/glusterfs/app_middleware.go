@@ -24,7 +24,7 @@ import (
 
 var (
 	kubeBackupDbToSecret = kubernetes.KubeBackupDbToSecret
-	logger          = utils.NewLogger("[jwt]", utils.LEVEL_DEBUG)
+	
 )
 
 // Authorization function
