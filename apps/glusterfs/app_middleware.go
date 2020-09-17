@@ -19,10 +19,12 @@ import (
 
 	"github.com/cloud-tools/heketi/middleware"
 	"github.com/cloud-tools/heketi/pkg/kubernetes"
+	"github.com/cloud-tools/heketi/pkg/utils"
 )
 
 var (
 	kubeBackupDbToSecret = kubernetes.KubeBackupDbToSecret
+	logger          = utils.NewLogger("[jwt]", utils.LEVEL_DEBUG)
 )
 
 // Authorization function
@@ -30,6 +32,8 @@ func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc
 
 	// Value saved by the JWT middleware.
 	data := context.Get(r, "jwt")
+	logger.LogError("ALVO get token. " + context)
+
 
 	// Need to change from interface{} to the jwt.Token type
 	token := data.(*jwt.Token)
