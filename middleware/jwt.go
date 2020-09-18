@@ -187,8 +187,9 @@ func (j *JwtAuth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Ha
 	}
 
 	// Store token in request for other middleware to access
+	context.Clear(r)
 	context.Set(r, "jwt", token)
-	logger.LogError("ALVO put token. ")
+	logger.LogError("ALVO put token. %v", context)
 
 
 	// Everything passes call next middleware
