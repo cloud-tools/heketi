@@ -32,6 +32,7 @@ func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc
 
 	// Value saved by the JWT middleware.
 	data := context.Get(r, "jwt")
+	context.Clear(r)
 	logger.LogError("ALVO get token. ")
 
 
