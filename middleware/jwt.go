@@ -190,10 +190,10 @@ func (j *JwtAuth) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Ha
 	ctx := r.Context()
 	logger.LogError("ALVO put token1. %s", ctx)
 	ctx = context.WithValue(ctx, "jwt", token)
-	r.WithContext(ctx)
+	newR := r.WithContext(ctx)
 	logger.LogError("ALVO put token2. %s", ctx)
 
 
 	// Everything passes call next middleware
-	next(w, r)
+	next(w, newR)
 }
