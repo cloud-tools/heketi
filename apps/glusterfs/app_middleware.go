@@ -33,7 +33,7 @@ func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc
 	ctx := r.Context()
 	data := ctx.Value("jwt")
 	
-	logger.LogError("ALVO get token. ")
+	logger.LogError("ALVO get token. %s", ctx)
 
 
 	// Need to change from interface{} to the jwt.Token type
