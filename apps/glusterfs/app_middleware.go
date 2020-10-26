@@ -12,8 +12,7 @@ package glusterfs
 import (
 	"net/http"
 	"strings"
-	"context"
-
+	
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/urfave/negroni"
 
