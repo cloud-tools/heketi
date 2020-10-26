@@ -12,9 +12,9 @@ package glusterfs
 import (
 	"net/http"
 	"strings"
+	"context"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/context"
 	"github.com/urfave/negroni"
 
 	"github.com/cloud-tools/heketi/middleware"
@@ -31,13 +31,16 @@ var (
 func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	// Value saved by the JWT middleware.
-	data := context.Get(r, "jwt")
-	context.Clear(r)
+	ctx := r.Context()
+	data := ctx.Value("jwt")
+	
 	logger.LogError("ALVO get token. ")
 
 
 	// Need to change from interface{} to the jwt.Token type
 	token := data.(*jwt.Token)
+	logger.LogError("ALVO get real . %s", token)
+	
 	claims := token.Claims.(*middleware.HeketiJwtClaims)
 
 	// Check access
