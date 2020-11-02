@@ -12,34 +12,26 @@ package glusterfs
 import (
 	"net/http"
 	"strings"
-	
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/urfave/negroni"
 
 	"github.com/cloud-tools/heketi/middleware"
 	"github.com/cloud-tools/heketi/pkg/kubernetes"
-	
 )
 
 var (
 	kubeBackupDbToSecret = kubernetes.KubeBackupDbToSecret
-	
 )
 
 // Authorization function
 func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	// Value saved by the JWT middleware.
-	ctx := r.Context()
-	data := ctx.Value("jwt")
-	
-	logger.LogError("ALVO get token. %s", ctx)
-
+	data := r.Context().Value("jwt")
 
 	// Need to change from interface{} to the jwt.Token type
 	token := data.(*jwt.Token)
-	logger.LogError("ALVO get real . %s", token)
-	
 	claims := token.Claims.(*middleware.HeketiJwtClaims)
 
 	// Check access
