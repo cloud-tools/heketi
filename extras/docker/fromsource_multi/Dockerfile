@@ -3,7 +3,7 @@
 # need to set 26 insead of latest 
 FROM fedora:26 as builder 
 
-ARG HEKETI_BRANCH="release-8/pprof"
+ARG HEKETI_BRANCH="release-8/georeplication"
 
 ENV BUILD_HOME=/build
 ENV GOPATH=$BUILD_HOME/golang
