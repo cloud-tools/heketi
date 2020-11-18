@@ -36,6 +36,8 @@ const (
 	BOLTDB_BUCKET_BLOCKVOLUME      = "BLOCKVOLUME"
 	BOLTDB_BUCKET_DBATTRIBUTE      = "DBATTRIBUTE"
 	DB_CLUSTER_HAS_FILE_BLOCK_FLAG = "DB_CLUSTER_HAS_FILE_BLOCK_FLAG"
+	DB_BRICK_HAS_SUBTYPE_FIELD     = "DB_BRICK_HAS_SUBTYPE_FIELD"
+	DEFAULT_OP_LIMIT               = 8
 )
 
 var (
@@ -64,6 +66,9 @@ type App struct {
 
 	// health monitor
 	nhealth *NodeHealthCache
+
+	// operations tracker
+	opcounter *OpCounter
 
 	// For testing only.  Keep access to the object
 	// not through the interface
@@ -202,6 +207,13 @@ func NewApp(conf *GlusterFSConfig) *App {
 		currentNodeHealthCache = app.nhealth
 	}
 
+	// set up the operations counter
+	oplimit := app.conf.MaxInflightOperations
+	if oplimit == 0 {
+		oplimit = DEFAULT_OP_LIMIT
+	}
+	app.opcounter = &OpCounter{Limit: oplimit}
+
 	// Show application has loaded
 	logger.Info("GlusterFS Application Loaded")
 
@@ -274,6 +286,11 @@ func (a *App) setFromEnvironmentalVariable() {
 		}
 	}
 
+	env = os.Getenv("HEKETI_BLOCK_HOSTING_VOLUME_OPTIONS")
+	if "" != env {
+		a.conf.BlockHostingVolumeOptions = env
+	}
+
 	env = os.Getenv("HEKETI_GLUSTERAPP_REBALANCE_ON_EXPANSION")
 	if env != "" {
 		value, err := strconv.ParseBool(env)
@@ -282,6 +299,16 @@ func (a *App) setFromEnvironmentalVariable() {
 		} else {
 			a.conf.SshConfig.RebalanceOnExpansion = value
 			a.conf.KubeConfig.RebalanceOnExpansion = value
+		}
+	}
+
+	env = os.Getenv("HEKETI_MAX_INFLIGHT_OPERATIONS")
+	if env != "" {
+		value, err := strconv.ParseInt(env, 10, 64)
+		if err != nil {
+			logger.LogError("Error: While parsing HEKETI_MAX_INFLIGHT_OPERATIONS: %v", err)
+		} else {
+			a.conf.MaxInflightOperations = uint64(value)
 		}
 	}
 }
@@ -326,6 +353,11 @@ func (a *App) setBlockSettings() {
 		// Should be in GB as this is input for block hosting volume create
 		BlockHostingVolumeSize = a.conf.BlockHostingVolumeSize
 	}
+	if a.conf.BlockHostingVolumeOptions != "" {
+		logger.Info("Block: New Block Hosting Volume Options: %v", a.conf.BlockHostingVolumeOptions)
+		BlockHostingVolumeOptions = a.conf.BlockHostingVolumeOptions
+	}
+
 }
 
 // Register Routes
@@ -452,6 +484,11 @@ func (a *App) SetRoutes(router *mux.Router) error {
 			Method:      "GET",
 			Pattern:     "/volumes",
 			HandlerFunc: a.VolumeList},
+		rest.Route{
+			Name:        "VolumeSetBlockRestriction",
+			Method:      "POST",
+			Pattern:     "/volumes/{id:[A-Fa-f0-9]+}/block-restriction",
+			HandlerFunc: a.VolumeSetBlockRestriction},
 
 		// Volume Cloning
 		rest.Route{
@@ -507,6 +544,12 @@ func (a *App) SetRoutes(router *mux.Router) error {
 			Method:      "POST",
 			Pattern:     "/internal/logging",
 			HandlerFunc: a.SetLogLevel},
+		// Operations state on server
+		rest.Route{
+			Name:        "OperationsInfo",
+			Method:      "GET",
+			Pattern:     "/operations",
+			HandlerFunc: a.OperationsInfo},
 	}
 
 	// Register all routes from the App
@@ -554,6 +597,23 @@ func (a *App) Backup(w http.ResponseWriter, r *http.Request) {
 func (a *App) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	logger.Warning("Invalid path or request %v", r.URL.Path)
 	http.Error(w, "Invalid path or request", http.StatusNotFound)
+}
+
+// ServerReset resets the app and its components to the state desired
+// after the server process has restarted. The intent of this function
+// is to perform cleanup & reset tasks that are needed by the server
+// process only (should not be used by other callers of the app).
+// This should be as part of the start-up of the server instance.
+func (a *App) ServerReset() error {
+	// currently this code just resets the operations in the db
+	// to stale
+	return a.db.Update(func(tx *bolt.Tx) error {
+		if err := MarkPendingOperationsStale(tx); err != nil {
+			logger.LogError("failed to mark operations stale: %v", err)
+			return err
+		}
+		return nil
+	})
 }
 
 // currentNodeHealthStatus returns a map of node ids to the most

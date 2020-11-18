@@ -299,7 +299,7 @@ func DbCreate(jsonfile string, dbfile string) error {
 				volume.Durability = NewNoneDurability()
 
 			default:
-				return fmt.Errorf("Not a known volume type: %v", err.Error())
+				return fmt.Errorf("Not a known volume durability type: %v", durability)
 			}
 
 			// Set the default values accordingly
@@ -375,6 +375,7 @@ func DbCreate(jsonfile string, dbfile string) error {
 
 	return nil
 }
+
 func DeleteBricksWithEmptyPath(db *bolt.DB, all bool, clusterIDs []string, nodeIDs []string, deviceIDs []string) error {
 
 	for _, id := range clusterIDs {
@@ -405,7 +406,6 @@ func DeleteBricksWithEmptyPath(db *bolt.DB, all bool, clusterIDs []string, nodeI
 				if err != nil {
 					return err
 				}
-				logger.Debug("deleting bricks with empty path in cluster %v", clusterEntry.Info.Id)
 				err = clusterEntry.DeleteBricksWithEmptyPath(tx)
 				if err != nil {
 					return err

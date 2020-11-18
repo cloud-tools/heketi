@@ -12,6 +12,7 @@ package cmdexec
 import (
 	"encoding/xml"
 	"fmt"
+	"strings"
 
 	"github.com/heketi/heketi/executors"
 	"github.com/heketi/heketi/pkg/utils"
@@ -161,12 +162,7 @@ func (s *CmdExecutor) VolumeDestroyCheck(host, volume string) error {
 	godbc.Require(volume != "")
 
 	// Determine if the volume is able to be deleted
-	err := s.checkForSnapshots(host, volume)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.checkForSnapshots(host, volume)
 }
 
 func (s *CmdExecutor) createVolumeOptionsCommand(volume *executors.VolumeRequest) []string {
@@ -218,6 +214,9 @@ func (s *CmdExecutor) checkForSnapshots(host, volume string) error {
 
 	// Structure used to unmarshal XML from snapshot gluster cli
 	type CliOutput struct {
+		OpRet    int    `xml:"opRet"`
+		OpErrno  int    `xml:"opErrno"`
+		OpErrStr string `xml:"opErrstr"`
 		SnapList struct {
 			Count int `xml:"count"`
 		} `xml:"snapList"`
@@ -236,6 +235,11 @@ func (s *CmdExecutor) checkForSnapshots(host, volume string) error {
 	err = xml.Unmarshal([]byte(output[0]), &snapInfo)
 	if err != nil {
 		return fmt.Errorf("Unable to determine snapshot information from volume %v: %v", volume, err)
+	}
+
+	if strings.Contains(snapInfo.OpErrStr, "does not exist") &&
+		strings.Contains(snapInfo.OpErrStr, volume) {
+		return &executors.VolumeDoesNotExistErr{Name: volume}
 	}
 
 	if snapInfo.SnapList.Count > 0 {

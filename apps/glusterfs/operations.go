@@ -11,7 +11,6 @@ package glusterfs
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/heketi/heketi/executors"
 	wdb "github.com/heketi/heketi/pkg/db"
@@ -341,6 +340,11 @@ func (ve *VolumeExpandOperation) Finalize() error {
 			}
 		}
 		ve.vol.Info.Size += sizeDelta
+		if ve.vol.Info.Block == true {
+			if e := ve.vol.AddRawCapacity(sizeDelta); e != nil {
+				return e
+			}
+		}
 		ve.op.FinalizeVolume(ve.vol)
 		if e := ve.vol.Save(tx); e != nil {
 			return e
@@ -697,19 +701,29 @@ func (bvc *BlockVolumeCreateOperation) Build() error {
 		if err != nil {
 			return err
 		}
-
+		reducedSize := ReduceRawSize(BlockHostingVolumeSize)
 		if len(volumes) > 0 {
 			bvc.bvol.Info.BlockHostingVolume = volumes[0].Info.Id
 			bvc.bvol.Info.Cluster = volumes[0].Info.Cluster
-		} else if bvc.bvol.Info.Size > BlockHostingVolumeSize {
+		} else if bvc.bvol.Info.Size > reducedSize {
 			return fmt.Errorf("The size configured for "+
 				"automatic creation of block hosting volumes "+
 				"(%v) is too small to host the requested "+
-				"block volume of size %v. Please create a "+
+				"block volume of size %v. The available "+
+				"size on this block hosting volume, minus overhead, is %v. "+
+				"Please create a "+
 				"sufficiently large block hosting volume "+
 				"manually.",
-				BlockHostingVolumeSize, bvc.bvol.Info.Size)
+				BlockHostingVolumeSize, bvc.bvol.Info.Size, reducedSize)
 		} else {
+			if found, err := hasPendingBlockHostingVolume(tx); found {
+				logger.Warning(
+					"temporarily rejecting block volume request:" +
+						" pending block-hosting-volume found")
+				return ErrTooManyOperations
+			} else if err != nil {
+				return err
+			}
 			vol, err := NewVolumeEntryForBlockHosting(clusters)
 			if err != nil {
 				return err
@@ -732,6 +746,10 @@ func (bvc *BlockVolumeCreateOperation) Build() error {
 			}
 			bvc.bvol.Info.BlockHostingVolume = vol.Info.Id
 			bvc.bvol.Info.Cluster = vol.Info.Cluster
+		}
+
+		if e := bvc.bvol.saveNewEntry(txdb); e != nil {
+			return e
 		}
 
 		// we've figured out what block-volume, hosting volume, and bricks we
@@ -837,11 +855,13 @@ func (bvc *BlockVolumeCreateOperation) Finalize() error {
 			}
 		}
 
-		// traditionally (that is before operations existed) the block volumes
-		// were updating most of their metadata after exec. This is only
-		// noteworthy because it is different from regular volumes which
-		// do most of those updates upfront.
-		if e := bvc.bvol.saveCreateBlockVolume(txdb); e != nil {
+		// block volume properties are mutated by the results coming
+		// back during exec. These properties need to be saved back
+		// to the db.
+		// This is only noteworthy because it is different from regular
+		// volumes which determines everything up front. Here certain
+		// values are determined by gluster-block commands.
+		if e := bvc.bvol.Save(tx); e != nil {
 			return e
 		}
 
@@ -956,7 +976,7 @@ func (vdel *BlockVolumeDeleteOperation) Rollback(executor executors.Executor) er
 func (vdel *BlockVolumeDeleteOperation) Finalize() error {
 	return vdel.db.Update(func(tx *bolt.Tx) error {
 		txdb := wdb.WrapTx(tx)
-		if e := vdel.bvol.removeComponents(txdb); e != nil {
+		if e := vdel.bvol.removeComponents(txdb, false); e != nil {
 			logger.LogError("Failed to remove block volume from db")
 			return e
 		}
@@ -1148,123 +1168,5 @@ func expandSizeFromOp(op *PendingOperationEntry) (sizeGB int, e error) {
 	}
 	e = fmt.Errorf("no OpExpandVolume action in pending op: %v",
 		op.Id)
-	return
-}
-
-// AsyncHttpOperation runs all the steps of an operation with the long-running
-// parts wrapped in an async http function. If AsyncHttpOperation returns nil
-// then it has started the async function and the caller should respond to the
-// client with success - otherwise an error object is returned. In the async
-// function the Exec and Finalize or Rollback steps of the operation will be
-// performed.
-func AsyncHttpOperation(app *App,
-	w http.ResponseWriter,
-	r *http.Request,
-	op Operation) error {
-
-	label := op.Label()
-	if err := op.Build(); err != nil {
-		logger.LogError("%v Build Failed: %v", label, err)
-		return err
-	}
-
-	app.asyncManager.AsyncHttpRedirectFunc(w, r, func() (string, error) {
-		logger.Info("Started async operation: %v", label)
-		if err := op.Exec(app.executor); err != nil {
-			if _, ok := err.(OperationRetryError); ok && op.MaxRetries() > 0 {
-				logger.Warning("%v Exec requested retry", label)
-				err := retryOperation(op, app.executor)
-				if err != nil {
-					return "", err
-				}
-				return op.ResourceUrl(), nil
-			}
-			if rerr := op.Rollback(app.executor); rerr != nil {
-				logger.LogError("%v Rollback error: %v", label, rerr)
-			}
-			logger.LogError("%v Failed: %v", label, err)
-			return "", err
-		}
-		if err := op.Finalize(); err != nil {
-			logger.LogError("%v Finalize failed: %v", label, err)
-			return "", err
-		}
-		logger.Info("%v succeeded", label)
-		return op.ResourceUrl(), nil
-	})
-	return nil
-}
-
-// RunOperation performs all steps of an Operation and returns
-// an error if any of those steps fail. This function is meant to
-// make it easy to run an operation outside of the rest endpoints
-// and should only be used in test code.
-func RunOperation(o Operation,
-	executor executors.Executor) (err error) {
-
-	label := o.Label()
-	defer func() {
-		if err != nil {
-			logger.LogError("Error in %v: %v", label, err)
-		}
-	}()
-
-	logger.Info("Running %v", o.Label())
-	if err := o.Build(); err != nil {
-		logger.LogError("%v Build Failed: %v", label, err)
-		return err
-	}
-	if err := o.Exec(executor); err != nil {
-		if _, ok := err.(OperationRetryError); ok && o.MaxRetries() > 0 {
-			logger.Warning("%v Exec requested retry", label)
-			return retryOperation(o, executor)
-		}
-		if rerr := o.Rollback(executor); rerr != nil {
-			logger.LogError("%v Rollback error: %v", label, rerr)
-		}
-		logger.LogError("%v Failed: %v", label, err)
-		return err
-	}
-	if err := o.Finalize(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func retryOperation(o Operation,
-	executor executors.Executor) (err error) {
-
-	label := o.Label()
-	max := o.MaxRetries()
-	for i := 0; i < max; i++ {
-		logger.Info("Retry %v (%v)", label, i+1)
-		if e := o.Rollback(executor); e != nil {
-			// when retrying rollback must succeed cleanly or it
-			// is not safe to retry
-			logger.LogError("%v Rollback error: %v", label, e)
-			return e
-		}
-		if e := o.Build(); e != nil {
-			logger.LogError("%v Build Failed: %v", label, e)
-			return e
-		}
-		err = o.Exec(executor)
-		if err == nil {
-			// exec succeeded. Finalize it and we're outta here.
-			return o.Finalize()
-		}
-		logger.LogError("%v Failed: %v", label, err)
-		if _, ok := err.(OperationRetryError); !ok {
-			break
-		}
-	}
-	if e := o.Rollback(executor); e != nil {
-		logger.LogError("%v Rollback error: %v", label, e)
-	}
-	// if we exceeded our retries, pull the "real" error out
-	// of the retry error so we return that
-	if ore, ok := err.(OperationRetryError); ok {
-		err = ore.OriginalError
-	}
 	return
 }

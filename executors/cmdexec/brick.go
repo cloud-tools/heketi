@@ -36,6 +36,13 @@ func (s *CmdExecutor) BrickCreate(host string,
 	brickPath := brick.Path
 	mountPath := utils.BrickMountFromPath(brickPath)
 
+	var xfsInodeOptions string
+	if brick.Format == executors.ArbiterFormat {
+		xfsInodeOptions = "maxpct=100"
+	} else {
+		xfsInodeOptions = "size=512"
+	}
+
 	// Create command set to execute on the node
 	devnode := utils.BrickDevNode(brick.VgId, brick.Name)
 	commands := []string{
@@ -44,7 +51,7 @@ func (s *CmdExecutor) BrickCreate(host string,
 		fmt.Sprintf("mkdir -p %v", mountPath),
 
 		// Setup the LV
-		fmt.Sprintf("lvcreate --autobackup=%v --poolmetadatasize %vK --chunksize 256K --size %vK --thin %v/%v --virtualsize %vK --name %v",
+		fmt.Sprintf("lvcreate -qq --autobackup=%v --poolmetadatasize %vK --chunksize 256K --size %vK --thin %v/%v --virtualsize %vK --name %v",
 			// backup LVM metadata
 			utils.BoolToYN(s.BackupLVM),
 
@@ -58,16 +65,16 @@ func (s *CmdExecutor) BrickCreate(host string,
 			utils.VgIdToName(brick.VgId),
 
 			// ThinP name
-			utils.BrickIdToThinPoolName(brick.Name),
+			brick.TpName,
 
 			// Allocation size
 			brick.Size,
 
 			// Logical Vol name
-			utils.BrickIdToName(brick.Name)),
+			brick.LvName),
 
 		// Format
-		fmt.Sprintf("mkfs.xfs -i size=512 -n size=8192 %v", devnode),
+		fmt.Sprintf("mkfs.xfs -i %v -n size=8192 %v", xfsInodeOptions, devnode),
 
 		// Fstab
 		fmt.Sprintf("awk \"BEGIN {print \\\"%v %v xfs rw,inode64,noatime,nouuid 1 2\\\" >> \\\"%v\\\"}\"",
@@ -109,19 +116,8 @@ func (s *CmdExecutor) BrickCreate(host string,
 	return b, nil
 }
 
-func (s *CmdExecutor) BrickDestroy(host string,
-	brick *executors.BrickRequest) (bool, error) {
-
-	godbc.Require(brick != nil)
-	godbc.Require(host != "")
-	godbc.Require(brick.Name != "")
-	godbc.Require(brick.VgId != "")
-	godbc.Require(brick.Path != "")
-
-	var (
-		umountErr      error
-		spaceReclaimed bool
-	)
+func (s *CmdExecutor) brickStorage(host string,
+	brick *executors.BrickRequest) (string, string, error) {
 
 	// Cloned bricks do not follow 'our' VG/LV naming, detect it.
 	commands := []string{
@@ -129,7 +125,7 @@ func (s *CmdExecutor) BrickDestroy(host string,
 	}
 	output, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
 	if output == nil || err != nil {
-		return spaceReclaimed, fmt.Errorf("No brick mounted on %v, unable to proceed with removing", brick.Path)
+		return "", "", fmt.Errorf("No brick mounted on %v, unable to proceed with removing", brick.Path)
 	}
 	dev := output[0]
 	// detect the thinp LV used by this brick (in "vg_.../tp_..." format)
@@ -142,13 +138,72 @@ func (s *CmdExecutor) BrickDestroy(host string,
 	}
 	tp := output[0]
 
+	return dev, tp, nil
+}
+
+func (s *CmdExecutor) deleteBrickLV(host, lv string) error {
+	// Remove the LV (by device name)
+	commands := []string{
+		fmt.Sprintf("lvremove --autobackup=%v -f %v",
+			utils.BoolToYN(s.BackupLVM), lv),
+	}
+	_, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
+	return err
+}
+
+func (s *CmdExecutor) countThinLVsInPool(host, tp string) (int, error) {
+	// Detect the number of bricks using the thin-pool
+	commands := []string{
+		fmt.Sprintf("lvs --noheadings --options=thin_count %v", tp),
+	}
+	output, err := s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
+	if err != nil {
+		return 0, err
+	}
+	thin_count, err := strconv.Atoi(strings.TrimSpace(output[0]))
+	if err != nil {
+		return 0, fmt.Errorf("Failed to convert number of logical volumes in thin pool %v on host %v: %v", tp, host, err)
+	}
+	return thin_count, nil
+}
+
+func (s *CmdExecutor) BrickDestroy(host string,
+	brick *executors.BrickRequest) (bool, error) {
+
+	godbc.Require(brick != nil)
+	godbc.Require(host != "")
+	godbc.Require(brick.Name != "")
+	godbc.Require(brick.VgId != "")
+	godbc.Require(brick.Path != "")
+	godbc.Require(brick.TpName != "")
+	godbc.Require(brick.LvName != "")
+
+	var (
+		umountErr      error
+		spaceReclaimed bool
+	)
+
+	// TODO: convert to a best effort sanity check
+	// dev, tp, err := s.brickStorage(host, brick)
+	// if err != nil {
+	// 	return spaceReclaimed, err
+	// }
+
 	// Try to unmount first
-	commands = []string{
+	commands := []string{
 		fmt.Sprintf("umount %v", brick.Path),
 	}
 	_, umountErr = s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
 	if umountErr != nil {
-		logger.Err(err)
+		logger.Err(umountErr)
+		// check if the brick was previously unmounted
+		out, e := s.RemoteExecutor.RemoteCommandExecute(
+			host, []string{"mount"}, 5)
+		if e == nil && len(out) == 1 && !strings.Contains(out[0], brick.Path) {
+			logger.Warning("brick path [%v] not mounted, assuming deleted",
+				brick.Path)
+			umountErr = nil
+		}
 	}
 
 	// remove brick from fstab before we start deleting LVM items.
@@ -158,7 +213,7 @@ func (s *CmdExecutor) BrickDestroy(host string,
 	// fstab referencing it, we could end up with a non-booting system.
 	// Even if we failed to umount the brick, remove it from fstab
 	// so that it does not get mounted again on next reboot.
-	err = s.removeBrickFromFstab(host, brick)
+	err := s.removeBrickFromFstab(host, brick)
 
 	// if either umount or fstab remove failed there's no point in
 	// continuing. We'll need either automated or manual recovery
@@ -171,31 +226,30 @@ func (s *CmdExecutor) BrickDestroy(host string,
 		return spaceReclaimed, umountErr
 	}
 
-	// Remove the LV (by device name)
-	commands = []string{
-		fmt.Sprintf("lvremove --autobackup=%v -f %v", utils.BoolToYN(s.BackupLVM), dev),
-	}
-	_, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
-	if err != nil {
-		logger.Err(err)
-	} else {
-		// no space freed when tp sticks around
-		spaceReclaimed = false
+	vg := utils.VgIdToName(brick.VgId)
+	lv := fmt.Sprintf("%v/%v", vg, brick.LvName)
+	tp := fmt.Sprintf("%v/%v", vg, brick.TpName)
+
+	if err := s.deleteBrickLV(host, lv); err != nil {
+		if errIsLvNotFound(err) {
+			logger.Warning("did not delete missing lv: %v", lv)
+		} else {
+			return spaceReclaimed, err
+		}
 	}
 
-	// Detect the number of bricks using the thin-pool
-	commands = []string{
-		fmt.Sprintf("lvs --noheadings --options=thin_count %v", tp),
-	}
-	output, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
+	thin_count, err := s.countThinLVsInPool(host, tp)
 	if err != nil {
-		logger.Err(err)
-		return spaceReclaimed, fmt.Errorf("Unable to determine number of logical volumes in "+
-			"thin pool %v on host %v", tp, host)
-	}
-	thin_count, err := strconv.Atoi(strings.TrimSpace(output[0]))
-	if err != nil {
-		return spaceReclaimed, fmt.Errorf("Failed to convert number of logical volumes in thin pool %v on host %v: %v", tp, host, err)
+		if errIsLvNotFound(err) {
+			logger.Warning("unable to count lvs in missing thin pool: %v", tp)
+			// if the thin pool is gone it can't host lvs
+			thin_count = 0
+		} else {
+			logger.Err(err)
+			return spaceReclaimed, fmt.Errorf(
+				"Unable to determine number of logical volumes in "+
+					"thin pool %v on host %v", tp, host)
+		}
 	}
 
 	// If there is no brick left in the thin-pool, it can be removed
@@ -204,7 +258,12 @@ func (s *CmdExecutor) BrickDestroy(host string,
 			fmt.Sprintf("lvremove --autobackup=%v -f %v", utils.BoolToYN(s.BackupLVM), tp),
 		}
 		_, err = s.RemoteExecutor.RemoteCommandExecute(host, commands, 5)
-		if err != nil {
+		if errIsLvNotFound(err) {
+			logger.Warning("did not delete missing thin pool: %v", tp)
+			// if the thin pool is gone then the bricks in the db associated
+			// with it take up no space
+			spaceReclaimed = true
+		} else if err != nil {
 			logger.Err(err)
 		} else {
 			spaceReclaimed = true
@@ -240,4 +299,13 @@ func (s *CmdExecutor) removeBrickFromFstab(
 		logger.Err(err)
 	}
 	return err
+}
+
+func errIsLvNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	e := strings.ToLower(err.Error())
+	return (strings.Contains(e, "not found") ||
+		strings.Contains(e, "failed to find"))
 }

@@ -42,7 +42,6 @@ func NewVolumeEntryForBlockHosting(clusters []string) (*VolumeEntry, error) {
 	msg.Size = BlockHostingVolumeSize
 	msg.Durability.Replicate.Replica = 3
 	msg.Block = true
-	msg.GlusterVolumeOptions = []string{"group gluster-block"}
 
 	vol := NewVolumeEntryFromRequest(&msg)
 
@@ -234,10 +233,12 @@ func (v *BlockVolumeEntry) cleanupBlockVolumeCreate(db wdb.DB,
 		return err
 	}
 
-	// best effort removal of anything on system
-	v.deleteBlockVolumeExec(db, hvname, executor)
+	err = v.deleteBlockVolumeExec(db, hvname, executor)
+	if err != nil {
+		return err
+	}
 
-	return v.removeComponents(db)
+	return v.removeComponents(db, false)
 }
 
 func (v *BlockVolumeEntry) Create(db wdb.DB,
@@ -248,7 +249,7 @@ func (v *BlockVolumeEntry) Create(db wdb.DB,
 		executor)
 }
 
-func (v *BlockVolumeEntry) saveCreateBlockVolume(db wdb.DB) error {
+func (v *BlockVolumeEntry) saveNewEntry(db wdb.DB) error {
 	return db.Update(func(tx *bolt.Tx) error {
 
 		err := v.Save(tx)
@@ -273,7 +274,11 @@ func (v *BlockVolumeEntry) saveCreateBlockVolume(db wdb.DB) error {
 			return err
 		}
 
-		volume.Info.BlockInfo.FreeSize = volume.Info.BlockInfo.FreeSize - v.Info.Size
+		if err := volume.ModifyFreeSize(-v.Info.Size); err != nil {
+			return err
+		}
+		logger.Debug("Reduced free size on volume %v by %v",
+			volume.Info.Id, v.Info.Size)
 
 		volume.BlockVolumeAdd(v.Info.Id)
 		err = volume.Save(tx)
@@ -310,14 +315,18 @@ func (v *BlockVolumeEntry) deleteBlockVolumeExec(db wdb.RODB,
 	logger.Debug("Using executor host [%v]", executorhost)
 
 	err = executor.BlockVolumeDestroy(executorhost, hvname, v.Info.Name)
-	if err != nil {
+	if _, ok := err.(*executors.VolumeDoesNotExistErr); ok {
+		logger.Warning(
+			"Block volume %v (%v) does not exist: assuming already deleted",
+			v.Info.Id, v.Info.Name)
+	} else if err != nil {
 		logger.LogError("Unable to delete volume: %v", err)
 		return err
 	}
 	return nil
 }
 
-func (v *BlockVolumeEntry) removeComponents(db wdb.DB) error {
+func (v *BlockVolumeEntry) removeComponents(db wdb.DB, keepSize bool) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		// Remove volume from cluster
 		cluster, err := NewClusterEntryFromId(tx, v.Info.Cluster)
@@ -343,7 +352,11 @@ func (v *BlockVolumeEntry) removeComponents(db wdb.DB) error {
 			logger.Err(err)
 			// Do not return here.. keep going
 		}
-		blockHostingVolume.Info.BlockInfo.FreeSize = blockHostingVolume.Info.BlockInfo.FreeSize + v.Info.Size
+		if !keepSize {
+			if err := blockHostingVolume.ModifyFreeSize(v.Info.Size); err != nil {
+				return err
+			}
+		}
 		blockHostingVolume.Save(tx)
 
 		if err != nil {
@@ -370,8 +383,14 @@ func (v *BlockVolumeEntry) Destroy(db wdb.DB, executor executors.Executor) error
 // the volume is incompatible. It returns false, and an error if the
 // database operation fails.
 func canHostBlockVolume(tx *bolt.Tx, bv *BlockVolumeEntry, vol *VolumeEntry) (bool, error) {
+	if vol.Info.BlockInfo.Restriction != api.Unrestricted {
+		logger.Warning("Block hosting volume %v usage is restricted: %v",
+			vol.Info.Id, vol.Info.BlockInfo.Restriction)
+		return false, nil
+	}
 	if vol.Info.BlockInfo.FreeSize < bv.Info.Size {
-		logger.Warning("Free size is less than the block volume requested")
+		logger.Warning("Free size %v is less than the requested block volume size %v",
+			vol.Info.BlockInfo.FreeSize, bv.Info.Size)
 		return false, nil
 	}
 
@@ -388,4 +407,38 @@ func canHostBlockVolume(tx *bolt.Tx, bv *BlockVolumeEntry, vol *VolumeEntry) (bo
 	}
 
 	return true, nil
+}
+
+func (v *BlockVolumeEntry) updateHosts(hosts []string) {
+	v.Info.BlockVolume.Hosts = hosts
+}
+
+// hasPendingBlockHostingVolume returns true if the db contains pending
+// block hosting volumes.
+func hasPendingBlockHostingVolume(tx *bolt.Tx) (bool, error) {
+	pmap, err := MapPendingVolumes(tx)
+	if err != nil {
+		return false, err
+	}
+	// filter out any volumes that are not marked for block
+	for volId, popId := range pmap {
+		vol, err := NewVolumeEntryFromId(tx, volId)
+		if err != nil {
+			return false, err
+		}
+		if !vol.Info.Block {
+			// drop volumes that are not BHVs
+			delete(pmap, volId)
+		}
+		pop, err := NewPendingOperationEntryFromId(tx, popId)
+		if err != nil {
+			return false, err
+		}
+		if pop.Status != NewOperation {
+			// drop pending operations that are not being worked on
+			// e.g. stale pending ops
+			delete(pmap, volId)
+		}
+	}
+	return (len(pmap) != 0), nil
 }

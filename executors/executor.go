@@ -49,9 +49,18 @@ const (
 // Returns the size of the device
 type DeviceInfo struct {
 	// Size in KB
-	Size       uint64
+	TotalSize  uint64
+	FreeSize   uint64
+	UsedSize   uint64
 	ExtentSize uint64
 }
+
+type BrickFormatType int
+
+const (
+	NormalFormat BrickFormatType = iota
+	ArbiterFormat
+)
 
 // Brick description
 type BrickRequest struct {
@@ -63,6 +72,10 @@ type BrickRequest struct {
 	Gid              int64
 	// Path is the brick mountpoint (named Path for symmetry with BrickInfo)
 	Path string
+	// lvm names
+	TpName string
+	LvName string
+	Format BrickFormatType
 }
 
 // Returns information about the location of the brick
@@ -236,4 +249,12 @@ type BlockVolumeInfo struct {
 	Iqn               string
 	Username          string
 	Password          string
+}
+
+type VolumeDoesNotExistErr struct {
+	Name string
+}
+
+func (dne *VolumeDoesNotExistErr) Error() string {
+	return "Volume Does Not Exist: " + dne.Name
 }

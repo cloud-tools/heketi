@@ -14,6 +14,7 @@ package client
 
 import (
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"reflect"
@@ -24,6 +25,7 @@ import (
 	"github.com/heketi/heketi/middleware"
 	"github.com/heketi/heketi/pkg/glusterfs/api"
 	"github.com/heketi/heketi/pkg/utils"
+	"github.com/heketi/heketi/server/admin"
 	"github.com/heketi/tests"
 	"github.com/urfave/negroni"
 )
@@ -32,7 +34,24 @@ const (
 	TEST_ADMIN_KEY = "adminkey"
 )
 
+type clientTestMiddleware struct {
+	intercept func(w http.ResponseWriter, r *http.Request) bool
+}
+
+func (cm *clientTestMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	if cm.intercept != nil && cm.intercept(w, r) {
+		return
+	}
+	next(w, r)
+}
+
 func setupHeketiServer(app *glusterfs.App) *httptest.Server {
+	return setupHeketiServerAndMiddleware(app, nil)
+}
+
+func setupHeketiServerAndMiddleware(
+	app *glusterfs.App, m negroni.Handler) *httptest.Server {
+
 	router := mux.NewRouter()
 	app.SetRoutes(router)
 	n := negroni.New()
@@ -41,8 +60,15 @@ func setupHeketiServer(app *glusterfs.App) *httptest.Server {
 	jwtconfig.Admin.PrivateKey = TEST_ADMIN_KEY
 	jwtconfig.User.PrivateKey = "userkey"
 
+	adminss := admin.New()
+	adminss.SetRoutes(router)
+
 	// Setup middleware
 	n.Use(middleware.NewJwtAuth(jwtconfig))
+	if m != nil {
+		n.Use(m)
+	}
+	n.Use(adminss)
 	n.UseFunc(app.Auth)
 	n.UseHandler(router)
 
@@ -587,7 +613,7 @@ func TestClientVolume(t *testing.T) {
 				defer sg.Done()
 
 				deviceReq := &api.DeviceAddRequest{}
-				deviceReq.Name = "/sd" + utils.GenUUID()
+				deviceReq.Name = "/dev/by-magic/id:" + utils.GenUUID()
 				deviceReq.NodeId = node.Id
 
 				// Create device
@@ -1038,4 +1064,199 @@ func TestNodeTags(t *testing.T) {
 	err = c.ClusterDelete(cluster.Id)
 	tests.Assert(t, err == nil)
 
+}
+
+func TestRetryAfterThrottle(t *testing.T) {
+	db := tests.Tempfile()
+	defer os.Remove(db)
+
+	// Create the app
+	app := glusterfs.NewTestApp(db)
+	defer app.Close()
+
+	// Setup the server
+	m := &clientTestMiddleware{}
+	ts := setupHeketiServerAndMiddleware(app, m)
+	defer ts.Close()
+
+	c := NewClientWithOptions(ts.URL, "admin", TEST_ADMIN_KEY, ClientOptions{
+		RetryEnabled:  true,
+		RetryCount:    RETRY_COUNT,
+		RetryMinDelay: 1, // this is a test. we want short delays
+		RetryMaxDelay: 2,
+	})
+
+	cluster_req := &api.ClusterCreateRequest{
+		ClusterFlags: api.ClusterFlags{
+			Block: true,
+			File:  true,
+		},
+	}
+
+	cluster, err := c.ClusterCreate(cluster_req)
+	tests.Assert(t, err == nil)
+
+	ictr := 0
+	permitAfter := 2
+	retryAfterHeader := -1 // test with built in delay calculation
+	m.intercept = func(w http.ResponseWriter, r *http.Request) bool {
+		ictr++
+		if ictr >= permitAfter {
+			return false
+		}
+		if retryAfterHeader != -1 {
+			w.Header().Set("Retry-After", fmt.Sprintf("%v", retryAfterHeader))
+		}
+		http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+		return true
+	}
+
+	nodeReq := &api.NodeAddRequest{}
+	nodeReq.ClusterId = cluster.Id
+	nodeReq.Hostnames.Manage = []string{"manage1"}
+	nodeReq.Hostnames.Storage = []string{"storage1"}
+	nodeReq.Zone = 1
+
+	// verify that the NodeAdd command had to retry a few times but succeeds
+	node, err := c.NodeAdd(nodeReq)
+	tests.Assert(t, err == nil, "expected err == nil, got", err)
+	tests.Assert(t, node != nil)
+	tests.Assert(t, ictr >= 2, "expected ictr >= 2, got", ictr)
+
+	// verify that the NodeAdd command fails after exhausting retries
+	ictr = 0
+	permitAfter = 200
+	retryAfterHeader = 0 // test with delay based on server header
+	nodeReq.Hostnames.Manage = []string{"manage2"}
+	nodeReq.Hostnames.Storage = []string{"storage2"}
+	_, err = c.NodeAdd(nodeReq)
+	tests.Assert(t, err != nil, "expected err != nil, got", err)
+	tests.Assert(t, err.Error() == "Too Many Requests", "expected err == 'Too Many Requests', got", err)
+	tests.Assert(t, ictr >= RETRY_COUNT, "expected ictr >= 2, got", ictr)
+
+	// disable internal retries
+	c = NewClientWithOptions(ts.URL, "admin", TEST_ADMIN_KEY, ClientOptions{
+		RetryEnabled:  false,
+		RetryCount:    RETRY_COUNT,
+		RetryMinDelay: 1, // this is a test. we want short delays
+		RetryMaxDelay: 2,
+	})
+
+	// verify that the NodeAdd command fails without doing retries
+	ictr = 0
+	permitAfter = 200
+	_, err = c.NodeAdd(nodeReq)
+	tests.Assert(t, err != nil, "expected err != nil, got", err)
+	tests.Assert(t, err.Error() == "Too Many Requests", "expected err == 'Too Many Requests', got", err)
+	tests.Assert(t, ictr == 1, "expected ictr == 1, got", ictr)
+}
+
+func TestAdminStatus(t *testing.T) {
+	db := tests.Tempfile()
+	defer os.Remove(db)
+
+	// Create the app
+	app := glusterfs.NewTestApp(db)
+	defer app.Close()
+
+	// Setup the server
+	ts := setupHeketiServer(app)
+	defer ts.Close()
+
+	c := NewClient(ts.URL, "admin", TEST_ADMIN_KEY)
+	tests.Assert(t, c != nil, "NewClient failed:", c)
+
+	as, err := c.AdminStatusGet()
+	tests.Assert(t, err == nil, "expected err == nil, got:", err)
+	tests.Assert(t, as.State == api.AdminStateNormal,
+		"expected as.State == api.AdminStateNormal, got:", as.State)
+
+	as.State = api.AdminStateLocal
+	err = c.AdminStatusSet(as)
+	tests.Assert(t, err == nil, "expected err == nil, got:", err)
+
+	as, err = c.AdminStatusGet()
+	tests.Assert(t, err == nil, "expected err == nil, got:", err)
+	tests.Assert(t, as.State == api.AdminStateLocal,
+		"expected as.State == api.AdminStateNormal, got:", as.State)
+
+	as.State = api.AdminStateNormal
+	err = c.AdminStatusSet(as)
+	tests.Assert(t, err == nil, "expected err == nil, got:", err)
+
+	as, err = c.AdminStatusGet()
+	tests.Assert(t, err == nil, "expected err == nil, got:", err)
+	tests.Assert(t, as.State == api.AdminStateNormal,
+		"expected as.State == api.AdminStateNormal, got:", as.State)
+}
+
+func TestVolumeSetBlockRestriction(t *testing.T) {
+	db := tests.Tempfile()
+	defer os.Remove(db)
+
+	// Create the app
+	app := glusterfs.NewTestApp(db)
+	defer app.Close()
+
+	// Setup the server
+	ts := setupHeketiServer(app)
+	defer ts.Close()
+
+	// Create cluster
+	c := NewClient(ts.URL, "admin", TEST_ADMIN_KEY)
+	tests.Assert(t, c != nil)
+	cluster_req := &api.ClusterCreateRequest{
+		ClusterFlags: api.ClusterFlags{
+			Block: true,
+			File:  true,
+		},
+	}
+	cluster, err := c.ClusterCreate(cluster_req)
+	tests.Assert(t, err == nil)
+
+	// Create node request packet
+	for n := 0; n < 4; n++ {
+		nodeReq := &api.NodeAddRequest{}
+		nodeReq.ClusterId = cluster.Id
+		nodeReq.Hostnames.Manage = []string{"manage" + fmt.Sprintf("%v", n)}
+		nodeReq.Hostnames.Storage = []string{"storage" + fmt.Sprintf("%v", n)}
+		nodeReq.Zone = n + 1
+
+		// Create node
+		node, err := c.NodeAdd(nodeReq)
+		tests.Assert(t, err == nil)
+
+		deviceReq := &api.DeviceAddRequest{}
+		deviceReq.Name = "/dev/by-magic/id:" + utils.GenUUID()
+		deviceReq.NodeId = node.Id
+
+		// Create device
+		err = c.DeviceAdd(deviceReq)
+		tests.Assert(t, err == nil)
+	}
+
+	// Create a volume
+	volumeReq := &api.VolumeCreateRequest{}
+	volumeReq.Size = 10
+	volumeReq.Block = true
+	volume, err := c.VolumeCreate(volumeReq)
+	tests.Assert(t, err == nil)
+	tests.Assert(t, volume.Id != "")
+	tests.Assert(t, volume.Size == volumeReq.Size)
+
+	v2, err := c.VolumeSetBlockRestriction(
+		volume.Id,
+		&api.VolumeBlockRestrictionRequest{
+			Restriction: api.Locked,
+		})
+	tests.Assert(t, err == nil)
+	tests.Assert(t, v2.BlockInfo.Restriction == api.Locked)
+
+	v2, err = c.VolumeSetBlockRestriction(
+		volume.Id,
+		&api.VolumeBlockRestrictionRequest{
+			Restriction: api.Unrestricted,
+		})
+	tests.Assert(t, err == nil)
+	tests.Assert(t, v2.BlockInfo.Restriction == api.Unrestricted)
 }

@@ -28,7 +28,7 @@ import (
 var (
 	// Restricting the deviceName to much smaller subset of Unix Path
 	// as unix path takes almost everything except NULL
-	deviceNameRe = regexp.MustCompile("^/[a-zA-Z0-9_./-]+$")
+	deviceNameRe = regexp.MustCompile("^/[a-zA-Z0-9_.:/-]+$")
 
 	// Volume name constraints decided by looking at
 	// "cli_validate_volname" function in cli-cmd-parser.c of gluster code
@@ -302,6 +302,28 @@ func (volCreateRequest VolumeCreateRequest) Validate() error {
 	)
 }
 
+type BlockRestriction string
+
+const (
+	Unrestricted   BlockRestriction = ""
+	Locked         BlockRestriction = "locked"
+	LockedByUpdate BlockRestriction = "locked-by-update"
+)
+
+func (br BlockRestriction) String() string {
+	switch br {
+	case Unrestricted:
+		return "(none)"
+	case Locked:
+		return "locked"
+	case LockedByUpdate:
+		return "locked-by-update"
+	default:
+		return "unknown"
+
+	}
+}
+
 type VolumeInfo struct {
 	VolumeCreateRequest
 	Id      string `json:"id"`
@@ -315,7 +337,9 @@ type VolumeInfo struct {
 	} `json:"mount"`
 	BlockInfo struct {
 		FreeSize     int              `json:"freesize,omitempty"`
+		ReservedSize int              `json:"reservedsize,omitempty"`
 		BlockVolumes sort.StringSlice `json:"blockvolume,omitempty"`
+		Restriction  BlockRestriction `json:"restriction,omitempty"`
 	} `json:"blockinfo,omitempty"`
 }
 
@@ -346,6 +370,16 @@ func (vcr VolumeCloneRequest) Validate() error {
 	return validation.ValidateStruct(&vcr,
 		validation.Field(&vcr.Name, validation.Match(volumeNameRe)),
 	)
+}
+
+type VolumeBlockRestrictionRequest struct {
+	Restriction BlockRestriction `json:"restriction"`
+}
+
+func (vbrr VolumeBlockRestrictionRequest) Validate() error {
+	return validation.ValidateStruct(&vbrr,
+		validation.Field(&vbrr.Restriction,
+			validation.In(Unrestricted, Locked)))
 }
 
 // BlockVolume
@@ -469,6 +503,8 @@ func (v *VolumeInfoResponse) String() string {
 		"Mount Options: backup-volfile-servers=%v\n"+
 		"Block: %v\n"+
 		"Free Size: %v\n"+
+		"Reserved Size: %v\n"+
+		"Block Hosting Restriction: %v\n"+
 		"Block Volumes: %v\n"+
 		"Durability Type: %v\n",
 		v.Name,
@@ -479,6 +515,8 @@ func (v *VolumeInfoResponse) String() string {
 		v.Mount.GlusterFS.Options["backup-volfile-servers"],
 		v.Block,
 		v.BlockInfo.FreeSize,
+		v.BlockInfo.ReservedSize,
+		v.BlockInfo.Restriction,
 		v.BlockInfo.BlockVolumes,
 		v.Durability.Type)
 
@@ -567,4 +605,31 @@ func (v *BlockVolumeInfoResponse) String() string {
 	*/
 
 	return s
+}
+
+type OperationsInfo struct {
+	Total    uint64 `json:"total"`
+	InFlight uint64 `json:"in_flight"`
+	// state based counts:
+	Stale uint64 `json:"stale"`
+	New   uint64 `json:"new"`
+}
+
+type AdminState string
+
+const (
+	AdminStateNormal   AdminState = "normal"
+	AdminStateReadOnly AdminState = "read-only"
+	AdminStateLocal    AdminState = "local-client"
+)
+
+type AdminStatus struct {
+	State AdminState `json:"state"`
+}
+
+func (as AdminStatus) Validate() error {
+	return validation.ValidateStruct(&as,
+		validation.Field(&as.State,
+			validation.Required,
+			validation.In(AdminStateNormal, AdminStateReadOnly, AdminStateLocal)))
 }

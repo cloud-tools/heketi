@@ -81,8 +81,10 @@ teardown_vagrant() {
 
 run_go_tests() {
     cd tests || fail "Unable to 'cd tests'."
-    go test -timeout=1h -tags functional -v
+    export HEKETI_PID
+    time go test -timeout=2h -tags functional -v
     gotest_result=$?
+    echo "~~~ go test exited with ${gotest_result}"
     cd ..
 }
 
