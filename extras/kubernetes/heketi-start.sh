@@ -1,6 +1,6 @@
 #!/bin/sh
 
-HEKETI_DB_PATH=${HEKETI_DB_PATH:-/var/lib/heketi/heketi.db}
+HEKETI_DB_PATH=${HEKETI_DB_PATH:-/var/lib/cloud-tools/heketi.db}
 
 if [ -f /backupdb/heketi.db.gz ] ; then
     gunzip -c /backupdb/heketi.db.gz > "${HEKETI_DB_PATH}"
@@ -18,4 +18,4 @@ elif [ -f /backupdb/heketi.db ] ; then
     echo "Copied backup db to ${HEKETI_DB_PATH}"
 fi
 
-/usr/bin/heketi --config=/etc/heketi/heketi.json
+/usr/bin/heketi --config=/etc/cloud-tools/heketi.json

@@ -8,7 +8,7 @@ LABEL description="CI Development build"
 # post install config and volume setup
 ADD ./heketi /usr/bin/heketi
 ADD ./heketi-start.sh /usr/bin/heketi-start.sh
-ADD ./heketi.json /etc/heketi/heketi.json
+ADD ./heketi.json /etc/cloud-tools/heketi.json
 
 RUN mkdir /var/lib/heketi
 VOLUME /var/lib/heketi

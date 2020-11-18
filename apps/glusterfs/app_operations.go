@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 
 	"github.com/boltdb/bolt"
 )

@@ -14,8 +14,8 @@ import (
 
 	"github.com/boltdb/bolt"
 
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils"
 )
 
 const (

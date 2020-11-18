@@ -18,7 +18,7 @@ compile() {
 }
 
 docker_build() {
-    sudo docker build --rm --tag heketi/heketi-rpi:latest .
+    sudo docker build --rm --tag cloud-tools/heketi-rpi:latest .
 }
 
 compile

@@ -6,6 +6,6 @@ for Raspberry Pi from an x86_64 machine
 
 ```
 $ ./build-rpi-dockerfile.sh
-$ sudo docker push heketi/heketi-rpi
+$ sudo docker push cloud-tools/heketi-rpi
 ```
 

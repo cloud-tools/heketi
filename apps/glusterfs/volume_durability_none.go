@@ -12,7 +12,7 @@ package glusterfs
 import (
 	"encoding/gob"
 
-	"github.com/heketi/heketi/executors"
+	"github.com/cloud-tools/heketi/executors"
 )
 
 func init() {

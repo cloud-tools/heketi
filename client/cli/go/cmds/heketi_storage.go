@@ -15,9 +15,9 @@ import (
 	"fmt"
 	"os"
 
-	client "github.com/heketi/heketi/client/api/go-client"
-	"github.com/heketi/heketi/pkg/db"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	client "github.com/cloud-tools/heketi/client/api/go-client"
+	"github.com/cloud-tools/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 	"github.com/spf13/cobra"
 
 	kubeapi "k8s.io/kubernetes/pkg/api/v1"
@@ -55,7 +55,7 @@ func init() {
 		"Filename to contain list of objects")
 	setupHeketiStorageCommand.Flags().StringVar(&HeketiStorageJobContainer,
 		"image",
-		"heketi/heketi:dev",
+		"cloud-tools/heketi:dev",
 		"container image to run this job")
 	setupHeketiStorageCommand.Flags().StringVar(&heketiStorageDurability,
 		"durability",

@@ -15,9 +15,9 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
-	wdb "github.com/heketi/heketi/pkg/db"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils"
+	wdb "github.com/cloud-tools/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils"
 )
 
 func (a *App) NodeAdd(w http.ResponseWriter, r *http.Request) {

@@ -25,11 +25,11 @@ import (
 	"github.com/urfave/negroni"
 	restclient "k8s.io/client-go/rest"
 
-	"github.com/heketi/heketi/apps/glusterfs"
-	"github.com/heketi/heketi/middleware"
-	"github.com/heketi/heketi/pkg/metrics"
-	"github.com/heketi/heketi/server/admin"
-	"github.com/heketi/heketi/server/config"
+	"github.com/cloud-tools/heketi/apps/glusterfs"
+	"github.com/cloud-tools/heketi/middleware"
+	"github.com/cloud-tools/heketi/pkg/metrics"
+	"github.com/cloud-tools/heketi/server/admin"
+	"github.com/cloud-tools/heketi/server/config"
 )
 
 var (

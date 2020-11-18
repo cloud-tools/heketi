@@ -15,8 +15,8 @@ import (
 
 	restclient "k8s.io/client-go/rest"
 
-	"github.com/heketi/heketi/executors/cmdexec"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/executors/cmdexec"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/heketi/tests"
 )
 

@@ -12,7 +12,7 @@ package glusterfs
 import (
 	"fmt"
 
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/pkg/utils"
 )
 
 var (

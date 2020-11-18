@@ -61,7 +61,7 @@ $ oc status
 In project gluster on server https://192.168.10.90:8443
 
 svc/ams - 172.30.244.79:8080
-  dc/ams deploys docker.io/heketi/heketi:dev
+  dc/ams deploys docker.io/cloud-tools/heketi:dev
     deployment #1 pending 5 seconds ago
 
 View details with 'oc describe <resource>/<name>' or list everything with 'oc get all'.

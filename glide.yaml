@@ -1,4 +1,4 @@
-package: github.com/heketi/heketi
+package: github.com/cloud-tools/heketi
 import:
 - package: github.com/auth0/go-jwt-middleware
 - package: github.com/boltdb/bolt

@@ -15,8 +15,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/heketi/heketi/apps/glusterfs"
-	"github.com/heketi/heketi/middleware"
+	"github.com/cloud-tools/heketi/apps/glusterfs"
+	"github.com/cloud-tools/heketi/middleware"
 )
 
 type Config struct {

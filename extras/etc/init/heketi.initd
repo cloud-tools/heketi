@@ -23,7 +23,7 @@
 exec="/usr/bin/heketi"
 prog="heketi"
 user="heketi"
-config="/etc/heketi/heketi.json"
+config="/etc/cloud-tools/heketi.json"
 pidfile="/var/run/$prog.pid"
 lockfile="/var/lock/subsys/$prog"
 logfile="/var/log/$prog"

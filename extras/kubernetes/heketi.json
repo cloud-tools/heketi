@@ -23,7 +23,7 @@
     "executor": "kubernetes",
 
     "_db_comment": "Database file name",
-    "db": "/var/lib/heketi/heketi.db",
+    "db": "/var/lib/cloud-tools/heketi.db",
 
     "kubeexec": {
       "rebalance_on_expansion": true

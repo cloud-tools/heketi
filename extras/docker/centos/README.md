@@ -13,7 +13,7 @@ These images are maintained by the Heketi Developers, for questions or problem
 reports they can be reached on
 [heketi-devel@gluster.org](mailto:heketi-devel@gluster.org), on Freenode IRC in
 #heketi or by opening an [issue on
-Gitub](https://github.com/heketi/heketi/issues/new).
+Gitub](https://github.com/cloud-tools/heketi/issues/new).
 
 
 ## Build Process

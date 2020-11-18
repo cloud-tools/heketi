@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils/ssh"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils/ssh"
 	"github.com/heketi/tests"
 )
 

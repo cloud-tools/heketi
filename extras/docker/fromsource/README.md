@@ -7,7 +7,7 @@ and verification of the unstable master builds.
 ## Downloading
 First you will need to download the latest development container:
 
-    # docker pull heketi/heketi:dev
+    # docker pull cloud-tools/heketi:dev
     
 > NOTE: Most likely you will always need to do a new pull before staring your tests since the container changes so often.
 
@@ -28,7 +28,7 @@ To run:
     # docker run -d -p 8080:8080 \
                  -v $PWD/heketi/config:/etc/heketi \
                  -v $PWD/heketi/db:/var/lib/heketi \
-                 heketi/heketi:dev
+                 cloud-tools/heketi:dev
 
 Now you can see the container running.  Here is an example:
 

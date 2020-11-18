@@ -42,11 +42,11 @@ build_docker_file(){
     if [ ! -f "$heketi_docker" ] ; then
         cd $DOCKERDIR/ci || fail "Unable to 'cd $DOCKERDIR/ci'."
         cp $TOP/heketi $DOCKERDIR/ci || fail "Unable to copy $TOP/heketi to $DOCKERDIR/ci"
-        _sudo docker build --rm --tag heketi/heketi:ci . || fail "Unable to create docker container"
-        _sudo docker save -o $HEKETI_DOCKER_IMG heketi/heketi:ci || fail "Unable to save docker image"
+        _sudo docker build --rm --tag cloud-tools/heketi:ci . || fail "Unable to create docker container"
+        _sudo docker save -o $HEKETI_DOCKER_IMG cloud-tools/heketi:ci || fail "Unable to save docker image"
         _sudo chmod 0666 $HEKETI_DOCKER_IMG || fail "Unable to chmod docker image"
         cp $HEKETI_DOCKER_IMG "$heketi_docker" || fail "Unable to copy image"
-        _sudo docker rmi heketi/heketi:ci
+        _sudo docker rmi cloud-tools/heketi:ci
         cd "$CURRENT_DIR" || fail "Unable to 'cd $CURRENT_DIR'."
     fi
     copy_docker_files

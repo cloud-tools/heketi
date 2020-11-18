@@ -12,7 +12,7 @@ package admin
 import (
 	"sync"
 
-	"github.com/heketi/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
 )
 
 type ServerState struct {

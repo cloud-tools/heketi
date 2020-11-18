@@ -18,11 +18,11 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
-	"github.com/heketi/heketi/executors"
-	"github.com/heketi/heketi/executors/kubeexec"
-	"github.com/heketi/heketi/executors/mockexec"
-	"github.com/heketi/heketi/executors/sshexec"
-	"github.com/heketi/heketi/pkg/utils"
+	"github.com/cloud-tools/heketi/executors"
+	"github.com/cloud-tools/heketi/executors/kubeexec"
+	"github.com/cloud-tools/heketi/executors/mockexec"
+	"github.com/cloud-tools/heketi/executors/sshexec"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/heketi/rest"
 )
 

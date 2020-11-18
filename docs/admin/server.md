@@ -1,5 +1,5 @@
 # Overview
-Before starting the service for the first time, you need to setup the configuration file accordingly.  On EPEL/Fedora systems, the file is located in `/etc/heketi/heketi.json`.  On other Linux systems, the example configuration file comes as part of the tar file.
+Before starting the service for the first time, you need to setup the configuration file accordingly.  On EPEL/Fedora systems, the file is located in `/etc/cloud-tools/heketi.json`.  On other Linux systems, the example configuration file comes as part of the tar file.
 
 # Config file
 The config file has information required to run the Heketi server.  The config file must be in JSON format with the following settings:
@@ -49,7 +49,7 @@ Example:
 ...
 	"glusterfs" : {
                 ...
-		"db" : "/var/lib/heketi/heketi.db",
+		"db" : "/var/lib/cloud-tools/heketi.db",
 		"brick_max_size_gb" : 1024,
 		"brick_min_size_gb" : 1,
 		"max_bricks_per_volume" : 33
@@ -62,8 +62,8 @@ Example:
 * On EPEL/Fedora systems, the private ssh keyfile must be readable by `heketi` user.    
 
 ## Examples
-* [Mock setup](https://github.com/heketi/heketi/blob/master/etc/heketi.json)
-* ~~[Functional test setup](https://github.com/heketi/heketi/blob/master/tests/functional/large/config/heketi.json)~~
+* [Mock setup](https://github.com/cloud-tools/heketi/blob/master/etc/heketi.json)
+* ~~[Functional test setup](https://github.com/cloud-tools/heketi/blob/master/tests/functional/large/config/heketi.json)~~
 
 # Starting the server
 
@@ -95,7 +95,7 @@ To start Heketi, type:
 To see the logs, type:
 
 ```
-# less /var/log/heketi/heketi
+# less /var/log/cloud-tools/heketi
 ```
 
 The database will be installed in `/var/lib/heketi`.

@@ -12,7 +12,7 @@ package glusterfs
 import (
 	"testing"
 
-	"github.com/heketi/heketi/executors"
+	"github.com/cloud-tools/heketi/executors"
 	"github.com/heketi/tests"
 )
 

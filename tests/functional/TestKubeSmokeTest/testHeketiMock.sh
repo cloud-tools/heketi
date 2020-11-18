@@ -28,7 +28,7 @@ display_information() {
 setup_heketi() {
 	# Start Heketi
 	echo -e "\\nStart Heketi container"
-	kubectl run heketi --image=heketi/heketi:ci --port=8080 || fail "Unable to start heketi container"
+	kubectl run heketi --image=cloud-tools/heketi:ci --port=8080 || fail "Unable to start heketi container"
 	sleep 2
 
 	# This blocks until ready

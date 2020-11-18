@@ -26,10 +26,10 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
-	client "github.com/heketi/heketi/client/api/go-client"
-	"github.com/heketi/heketi/pkg/db"
-	"github.com/heketi/heketi/pkg/glusterfs/api"
-	"github.com/heketi/heketi/pkg/utils"
+	client "github.com/cloud-tools/heketi/client/api/go-client"
+	"github.com/cloud-tools/heketi/pkg/db"
+	"github.com/cloud-tools/heketi/pkg/glusterfs/api"
+	"github.com/cloud-tools/heketi/pkg/utils"
 	"github.com/heketi/tests"
 )
 
@@ -1191,7 +1191,7 @@ func TestVolumeClusterResizeByAddingDevices(t *testing.T) {
 	tests.Assert(t, err == ErrNoSpace)
 }
 
-// Test for https://github.com/heketi/heketi/issues/382:
+// Test for https://github.com/cloud-tools/heketi/issues/382:
 //
 // A TopologyInfo request running concurrently to a
 // VolumeCreate request failed with "Id not found" due

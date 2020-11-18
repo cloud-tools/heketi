@@ -83,7 +83,7 @@ fi
 # heketi service back to the foreground again.
 if [[ "$(stat -c %s ${HEKETI_PATH}/heketi.db)" == 0 && -n "${HEKETI_TOPOLOGY_FILE}" ]]; then
     # start hketi in the background
-    /usr/bin/heketi --config=/etc/heketi/heketi.json &
+    /usr/bin/heketi --config=/etc/cloud-tools/heketi.json &
 
     # wait until heketi replies
     while ! curl http://localhost:8080/hello; do
@@ -106,5 +106,5 @@ if [[ "$(stat -c %s ${HEKETI_PATH}/heketi.db)" == 0 && -n "${HEKETI_TOPOLOGY_FIL
     fg %1
 else
     # just start in the foreground
-    exec /usr/bin/heketi --config=/etc/heketi/heketi.json
+    exec /usr/bin/heketi --config=/etc/cloud-tools/heketi.json
 fi

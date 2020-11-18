@@ -79,7 +79,7 @@ setup_all_pods() {
 
 	# Start Heketi
 	echo -e "\\nStart Heketi container"
-    sed -e "s#heketi/heketi:dev#heketi/heketi:ci#" \
+    sed -e "s#cloud-tools/heketi:dev#cloud-tools/heketi:ci#" \
         -e "s#Always#IfNotPresent#" \
         "$RESOURCES_DIR/deploy-heketi-deployment.json" | kubectl create -f -
 
