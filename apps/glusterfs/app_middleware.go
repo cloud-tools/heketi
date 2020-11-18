@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/context"
 	"github.com/urfave/negroni"
 
 	"github.com/cloud-tools/heketi/middleware"
@@ -32,7 +31,7 @@ func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc
 	data := context.Get(r, "jwt")
 
 	// Need to change from interface{} to the jwt.Token type
-	token := data.(*jwt.Token)
+	data := r.Context().Value("jwt")
 	claims := token.Claims.(*middleware.HeketiJwtClaims)
 
 	// Check access
