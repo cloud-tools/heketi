@@ -17,8 +17,8 @@ ENV HEKETI_BRANCH="release-8/without_georep"
 RUN mkdir $BUILD_HOME $GOPATH && \
     dnf -y install glide golang git make mercurial && \
     dnf -y clean all && \
-    mkdir -p $GOPATH/src/github.com/heketi && \
-    cd $GOPATH/src/github.com/heketi && \
+    mkdir -p $GOPATH/src/github.com/cloud-tools && \
+    cd $GOPATH/src/github.com/cloud-tools && \
     git clone -b $HEKETI_BRANCH https://github.com/cloud-tools/heketi.git && \
     cd $GOPATH/src/github.com/cloud-tools/heketi && \
     glide install -v && \
@@ -32,7 +32,7 @@ RUN mkdir $BUILD_HOME $GOPATH && \
     dnf -y clean all
 
 # post install config and volume setup
-ADD ./heketi.json /etc/cloud-tools/heketi.json
+ADD ./heketi.json /etc/heketi/heketi.json
 ADD ./heketi-start.sh /usr/bin/heketi-start.sh
 VOLUME /etc/heketi
 
