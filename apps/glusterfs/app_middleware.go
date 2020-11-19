@@ -28,10 +28,10 @@ var (
 func (a *App) Auth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 	// Value saved by the JWT middleware.
-	data := context.Get(r, "jwt")
+	data := r.Context().Value("jwt")
 
 	// Need to change from interface{} to the jwt.Token type
-	data := r.Context().Value("jwt")
+	token := data.(*jwt.Token)
 	claims := token.Claims.(*middleware.HeketiJwtClaims)
 
 	// Check access
