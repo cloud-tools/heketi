@@ -1,5 +1,5 @@
 # Overview
-Before starting the service for the first time, you need to setup the configuration file accordingly.  On EPEL/Fedora systems, the file is located in `/etc/cloud-tools/heketi.json`.  On other Linux systems, the example configuration file comes as part of the tar file.
+Before starting the service for the first time, you need to setup the configuration file accordingly.  On EPEL/Fedora systems, the file is located in `/etc/heketi/heketi.json`.  On other Linux systems, the example configuration file comes as part of the tar file.
 
 # Config file
 The config file has information required to run the Heketi server.  The config file must be in JSON format with the following settings:

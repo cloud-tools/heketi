@@ -7,7 +7,7 @@ LABEL description="Heketi Container for Raspberry Pi"
 
 ADD ./heketi /usr/bin/heketi
 ADD ./heketi-cli /usr/bin/heketi-cli
-ADD ./heketi.json /etc/cloud-tools/heketi.json
+ADD ./heketi.json /etc/heketi/heketi.json
 ADD ./heketi-start.sh /usr/bin/heketi-start.sh
 VOLUME /etc/heketi
 

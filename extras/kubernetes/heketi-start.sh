@@ -18,4 +18,4 @@ elif [ -f /backupdb/heketi.db ] ; then
     echo "Copied backup db to ${HEKETI_DB_PATH}"
 fi
 
-/usr/bin/heketi --config=/etc/cloud-tools/heketi.json
+/usr/bin/heketi --config=/etc/heketi/heketi.json
